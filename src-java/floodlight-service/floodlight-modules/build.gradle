@@ -1,5 +1,6 @@
 plugins {
     id 'io.freefair.aspectj.post-compile-weaving'
+    id 'me.champeau.jmh' version '0.6.6'
 }
 
 compileJava.ajc.options.compilerArgs += '-showWeaveInfo'
@@ -67,6 +68,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    jmh 'org.openjdk.jmh:jmh-core:1.35'
+    jmhAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess:1.35'
 }
 
 repositories {
@@ -81,4 +85,8 @@ build.dependsOn generateVersionTxt
 jar {
     // Omit version in the jar file name. This is for Docker image build purpose.
     archiveFileName = "${archivesBaseName}.${archiveExtension.get()}"
+}
+
+jmhJar {
+    zip64=true
 }
