@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import org.openkilda.model.SwitchFeature;
 
 import net.floodlightcontroller.core.IOFSwitch;
+import org.projectfloodlight.openflow.protocol.OFVersion;
 
 import java.util.Optional;
 
@@ -30,6 +31,10 @@ public class GroupsFeature extends AbstractFeature {
     @Override
     public Optional<SwitchFeature> discover(IOFSwitch sw) {
         Optional<SwitchFeature> empty = Optional.empty();
+        if (sw.getOFFactory().getVersion().compareTo(OFVersion.OF_12) < 0) {
+            return empty;
+        }
+
         if (containsIgnoreCase(sw.getSwitchDescription().getManufacturerDescription(), CENTEC_MANUFACTURED)) {
             return empty;
         }

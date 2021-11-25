@@ -187,7 +187,9 @@ public final class SwitchFlowUtils {
         fmb.setBufferId(OFBufferId.NO_BUFFER);
         fmb.setCookie(U64.of(cookie));
         fmb.setPriority(priority);
-        fmb.setTableId(TableId.of(tableId));
+        if (0 < tableId) {
+            fmb.setTableId(TableId.of(tableId));
+        }
 
         return fmb;
     }

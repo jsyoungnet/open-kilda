@@ -39,6 +39,7 @@ import org.openkilda.model.SwitchFeature;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import lombok.Builder;
+import lombok.extern.slf4j.Slf4j;
 import net.floodlightcontroller.core.IOFSwitch;
 import org.projectfloodlight.openflow.protocol.OFBucket;
 import org.projectfloodlight.openflow.protocol.OFFactory;
@@ -46,6 +47,7 @@ import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFGroupAdd;
 import org.projectfloodlight.openflow.protocol.OFGroupType;
 import org.projectfloodlight.openflow.protocol.OFMeterMod;
+import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
@@ -62,6 +64,7 @@ import org.projectfloodlight.openflow.types.TransportPort;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class VerificationFlowGenerator extends MeteredFlowGenerator {
 
     private final boolean broadcast;
@@ -118,7 +121,12 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
 
     private static void addStandardDiscoveryActions(IOFSwitch sw, ArrayList<OFAction> actionList) {
         actionList.add(actionSendToController(sw.getOFFactory()));
-        actionList.add(actionSetDstMac(sw.getOFFactory(), convertDpIdToMac(sw.getId())));
+        OFVersion version = sw.getOFFactory().getVersion();
+        log.debug("{}.addStandardDiscoveryActions(...) set-field action version check: current={} check={}",
+                VerificationFlowGenerator.class.getName(), version, 0 < version.compareTo(OFVersion.OF_12));
+        if (0 < version.compareTo(OFVersion.OF_12)) {
+            actionList.add(actionSetDstMac(sw.getOFFactory(), convertDpIdToMac(sw.getId())));
+        }
     }
 
     private OFFlowMod buildVerificationRule(IOFSwitch sw, boolean isBroadcast, long cookie,
