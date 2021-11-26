@@ -17,11 +17,20 @@ package org.openkilda.floodlight.feature;
 
 import org.openkilda.model.SwitchFeature;
 
+import lombok.extern.slf4j.Slf4j;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.core.internal.TableFeatures;
+import org.projectfloodlight.openflow.protocol.OFInstructionType;
+import org.projectfloodlight.openflow.protocol.OFTableFeaturePropInstructions;
 import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.instructionid.OFInstructionId;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.TableId;
 
+import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 public class MeterFeature extends AbstractFeature {
     private final boolean isOvsMetersEnabled;
 
@@ -38,7 +47,35 @@ public class MeterFeature extends AbstractFeature {
         if (MANUFACTURER_NICIRA.equals(sw.getSwitchDescription().getManufacturerDescription()) && !isOvsMetersEnabled) {
             return empty;
         }
+        if (! checkTableFeatures(sw)) {
+            return empty;
+        }
 
         return Optional.of(SwitchFeature.METERS);
+    }
+
+
+    private boolean checkTableFeatures(IOFSwitch sw) {
+        boolean haveSupport = false;
+        DatapathId swId = sw.getId();
+        for (int i = 0; i < sw.getNumTables(); i++) {
+            TableFeatures tableFeatures = sw.getTableFeatures(TableId.of(i));
+            log.debug("Detect meters support by analysing table features sw={} features={}", swId, tableFeatures);
+            haveSupport |= checkTableFeatures(tableFeatures);
+        }
+        log.debug(
+                "Detection result for meters support by analysing tables features for {} is meters are {}", swId,
+                haveSupport ? "supported" : "NOT supported");
+        return haveSupport;
+    }
+
+    private boolean checkTableFeatures(TableFeatures tableFeatures) {
+        OFTableFeaturePropInstructions instructions = tableFeatures.getPropInstructions();
+        for (OFInstructionId entry : instructions.getInstructionIds()) {
+            if (Objects.equals(entry.getType(), OFInstructionType.METER)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

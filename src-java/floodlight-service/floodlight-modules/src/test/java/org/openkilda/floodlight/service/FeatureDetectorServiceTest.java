@@ -15,7 +15,9 @@
 
 package org.openkilda.floodlight.service;
 
+import static org.easymock.EasyMock.eq;
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 import static org.openkilda.model.SwitchFeature.BFD;
 import static org.openkilda.model.SwitchFeature.BFD_REVIEW;
 import static org.openkilda.model.SwitchFeature.GROUPS;
@@ -43,18 +45,30 @@ import org.openkilda.model.SwitchFeature;
 import com.google.common.collect.ImmutableSet;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.SwitchDescription;
+import net.floodlightcontroller.core.internal.TableFeatures;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
+import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFInstructionType;
+import org.projectfloodlight.openflow.protocol.OFTableFeaturePropInstructions;
 import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.instructionid.OFInstructionId;
+import org.projectfloodlight.openflow.protocol.instructionid.OFInstructionIdMeter;
+import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.TableId;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class FeatureDetectorServiceTest extends EasyMockSupport {
+    private static final DatapathId SWITCH_ID = DatapathId.of(1);
+
     private final FeatureDetectorService featuresDetector = new FeatureDetectorService();
     private final FloodlightModuleContext moduleContext = new FloodlightModuleContext();
 
@@ -270,10 +284,41 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         expect(ofFactory.getVersion()).andReturn(version).anyTimes();
 
         IOFSwitch sw = createMock(IOFSwitch.class);
+        expect(sw.getId()).andReturn(SWITCH_ID).anyTimes();
         expect(sw.getSwitchDescription()).andReturn(description).anyTimes();
         expect(sw.getOFFactory()).andReturn(ofFactory).anyTimes();
         expect(sw.getNumTables()).andReturn((short) numTables).anyTimes();
+        for (int i = 0; i < numTables; i++) {
+            TableId tableId = TableId.of(i);
+            expect(sw.getTableFeatures(eq(tableId))).andReturn(newTableFeatures(tableId, true)).anyTimes();
+        }
 
         return sw;
+    }
+
+    private TableFeatures newTableFeatures(TableId tableId, boolean showMeterInstructions) {
+        List<OFInstructionId> instructionIdsList = new ArrayList<>();
+        if (showMeterInstructions) {
+            instructionIdsList.add(newInstructionMeterId());
+        }
+
+        OFTableFeaturePropInstructions instructions = EasyMock.createMock(OFTableFeaturePropInstructions.class);
+        expect(instructions.getInstructionIds()).andReturn(instructionIdsList).anyTimes();
+        replay(instructions);
+
+        TableFeatures features = EasyMock.createMock(TableFeatures.class);
+        expect(features.getTableId()).andReturn(tableId).anyTimes();
+        expect(features.getPropInstructions()).andReturn(instructions).anyTimes();
+        replay(features);
+
+        return features;
+    }
+
+    private OFInstructionIdMeter newInstructionMeterId() {
+        OFInstructionIdMeter instructionId = EasyMock.createMock(OFInstructionIdMeter.class);
+        expect(instructionId.getType()).andReturn(OFInstructionType.METER).anyTimes();
+        replay(instructionId);
+
+        return instructionId;
     }
 }

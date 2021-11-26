@@ -33,11 +33,14 @@
 package org.openkilda.floodlight;
 
 import static org.easymock.EasyMock.expect;
+import static org.easymock.EasyMock.replay;
 
 import org.openkilda.floodlight.service.FeatureDetectorService;
 
+import com.google.common.collect.ImmutableList;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.SwitchDescription;
+import net.floodlightcontroller.core.internal.TableFeatures;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import org.easymock.EasyMock;
 import org.junit.Before;
@@ -45,10 +48,14 @@ import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFInstructionType;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
+import org.projectfloodlight.openflow.protocol.OFTableFeaturePropInstructions;
 import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.instructionid.OFInstructionIdMeter;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.OFPort;
+import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.types.U64;
 
 import java.net.InetSocketAddress;
@@ -94,7 +101,30 @@ public class FloodlightTestCase {
         expect(sw.isActive()).andReturn(true).anyTimes();
         expect(sw.getLatency()).andReturn(U64.of(10L)).anyTimes();
         expect(sw.getInetAddress()).andReturn(inetAddr).anyTimes();
-        expect(sw.getNumTables()).andReturn((short) 8).anyTimes();
+
+        short tablesNumber = 8;
+        expect(sw.getNumTables()).andReturn(tablesNumber).anyTimes();
+        for (int i = 0; i < tablesNumber; i++) {
+            TableId tableId = TableId.of(i);
+            expect(sw.getTableFeatures(EasyMock.eq(tableId))).andReturn(newTableFeatures(tableId)).anyTimes();
+        }
         return sw;
+    }
+
+    private TableFeatures newTableFeatures(TableId tableId) {
+        OFInstructionIdMeter meterInstructionId = EasyMock.createMock(OFInstructionIdMeter.class);
+        expect(meterInstructionId.getType()).andReturn(OFInstructionType.METER).anyTimes();
+        replay(meterInstructionId);
+
+        OFTableFeaturePropInstructions instructions = EasyMock.createMock(OFTableFeaturePropInstructions.class);
+        expect(instructions.getInstructionIds()).andReturn(ImmutableList.of(meterInstructionId)).anyTimes();
+        replay(instructions);
+
+        TableFeatures features = EasyMock.createMock(TableFeatures.class);
+        expect(features.getTableId()).andReturn(tableId).anyTimes();
+        expect(features.getPropInstructions()).andReturn(instructions).anyTimes();
+        replay(features);
+
+        return features;
     }
 }
