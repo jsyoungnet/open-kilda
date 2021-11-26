@@ -80,7 +80,6 @@ abstract class AbstractGroupInstall<T extends SpeakerCommandReport> extends Grou
                 .setPort(OFPort.of(mirrorConfig.getFlowPort())).build());
         OFBucket flowBucket = ofFactory.buildBucket()
                 .setActions(flowActions)
-                .setWatchGroup(OFGroup.ANY)
                 .build();
 
         List<OFBucket> buckets = Lists.newArrayList(flowBucket);
@@ -97,7 +96,7 @@ abstract class AbstractGroupInstall<T extends SpeakerCommandReport> extends Grou
             mirrorActions.add(ofFactory.actions().buildOutput()
                     .setPort(OFPort.of(mirrorConfigData.getMirrorPort())).build());
 
-            buckets.add(ofFactory.buildBucket().setActions(mirrorActions).setWatchGroup(OFGroup.ANY).build());
+            buckets.add(ofFactory.buildBucket().setActions(mirrorActions).build());
         }
 
         return buckets;

@@ -172,7 +172,6 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
                 .setActions(Lists.newArrayList(
                         actionSetDstMac(sw.getOFFactory(), convertDpIdToMac(sw.getId())),
                         actionSendToController(sw.getOFFactory())))
-                .setWatchGroup(OFGroup.ANY)
                 .build());
 
         TransportPort udpPort = TransportPort.of(LATENCY_PACKET_UDP_PORT);
@@ -183,7 +182,6 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
         bucketList.add(ofFactory
                 .buildBucket()
                 .setActions(latencyActions)
-                .setWatchGroup(OFGroup.ANY)
                 .build());
 
         return ofFactory.buildGroupAdd()
