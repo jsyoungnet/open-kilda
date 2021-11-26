@@ -74,6 +74,13 @@ public class MeterFeature extends AbstractFeature {
         if (instructions == null) {
             return false;
         }
+        return checkTableFeatures(instructions);
+    }
+
+    private boolean checkTableFeatures(OFTableFeaturePropInstructions instructions) {
+        if (instructions == null) {
+            return false;
+        }
 
         for (OFInstructionId entry : instructions.getInstructionIds()) {
             if (Objects.equals(entry.getType(), OFInstructionType.METER)) {
