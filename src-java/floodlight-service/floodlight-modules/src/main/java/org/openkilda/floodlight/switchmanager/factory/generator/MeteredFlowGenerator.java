@@ -66,11 +66,14 @@ public abstract class MeteredFlowGenerator implements SwitchFlowGenerator {
         if (sw.getOFFactory().getVersion().compareTo(OF_12) <= 0) {
             return null;
         }
+        Set<SwitchFeature> switchFeatures = featureDetectorService.detectSwitch(sw);
+        if (! switchFeatures.contains(SwitchFeature.METERS)) {
+            return null;
+        }
+
         long rate;
         long burstSize;
         Set<OFMeterFlags> flags;
-        Set<SwitchFeature> switchFeatures = featureDetectorService.detectSwitch(sw);
-
         if (switchFeatures.contains(SwitchFeature.PKTPS_FLAG)) {
             flags = ImmutableSet.of(OFMeterFlags.PKTPS, OFMeterFlags.STATS, OFMeterFlags.BURST);
             // With PKTPS flag rate and burst size is in packets

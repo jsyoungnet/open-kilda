@@ -1379,7 +1379,8 @@ public class SwitchManagerTest {
         if (isCentecSwitch) {
             features = Sets.newHashSet(METERS, LIMITED_BURST_SIZE);
         } else {
-            features = Sets.newHashSet(BFD, GROUP_PACKET_OUT_CONTROLLER, NOVIFLOW_PUSH_POP_VXLAN, NOVIFLOW_COPY_FIELD,
+            features = Sets.newHashSet(
+                    METERS, BFD, GROUP_PACKET_OUT_CONTROLLER, NOVIFLOW_PUSH_POP_VXLAN, NOVIFLOW_COPY_FIELD,
                     RESET_COUNTS_FLAG);
         }
         expect(featureDetectorService.detectSwitch(iofSwitch)).andStubReturn(features);
