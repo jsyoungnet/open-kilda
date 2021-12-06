@@ -17,26 +17,18 @@ package org.openkilda.rulemanager;
 
 import org.openkilda.model.SwitchId;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+public interface OfEntityBatch {
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.UUID;
+    void addInstallFlow(FlowSpeakerData data, SwitchId switchId);
 
-@JsonSerialize
-@Getter
-@SuperBuilder
-@EqualsAndHashCode(of = {"switchId", "ofVersion"})
-public abstract class SpeakerCommandData {
+    void addDeleteFlow(FlowSpeakerData data, SwitchId switchId);
 
-    @Builder.Default
-    protected String uuid = UUID.randomUUID().toString();
-    protected SwitchId switchId;
-    @Builder.Default
-    protected Collection<String> dependsOn = new ArrayList<>();
-    protected OfVersion ofVersion;
+    void addInstallMeter(MeterSpeakerData data, SwitchId switchId);
+
+    void addDeleteMeter(MeterSpeakerData data, SwitchId switchId);
+
+    void addInstallGroup(GroupSpeakerData data, SwitchId switchId);
+
+    void addDeleteGroup(GroupSpeakerData data, SwitchId switchId);
+
 }

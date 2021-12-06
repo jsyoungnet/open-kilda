@@ -15,23 +15,26 @@
 
 package org.openkilda.rulemanager;
 
-import org.openkilda.model.MeterId;
+import org.openkilda.model.GroupId;
+import org.openkilda.rulemanager.group.Bucket;
+import org.openkilda.rulemanager.group.GroupType;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Set;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Value
 @JsonSerialize
 @SuperBuilder
-public class MeterSpeakerCommandData extends SpeakerCommandData {
+public class GroupSpeakerData extends SpeakerData {
 
-    MeterId meterId;
-    long rate;
-    long burst;
-    Set<MeterFlag> flags;
+    GroupId groupId;
+    GroupType type;
+    List<Bucket> buckets;
+
+
 }

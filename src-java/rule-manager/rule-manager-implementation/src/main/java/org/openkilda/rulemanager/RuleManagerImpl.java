@@ -61,9 +61,9 @@ public class RuleManagerImpl implements RuleManager {
     }
 
     @Override
-    public List<SpeakerCommandData> buildRulesForFlowPath(
+    public List<SpeakerData> buildRulesForFlowPath(
             FlowPath flowPath, boolean filterOutUsedSharedRules, DataAdapter adapter) {
-        List<SpeakerCommandData> result = new ArrayList<>();
+        List<SpeakerData> result = new ArrayList<>();
         Flow flow = adapter.getFlow(flowPath.getPathId());
         FlowTransitEncapsulation encapsulation = adapter.getTransitEncapsulation(flowPath.getPathId());
 
@@ -121,16 +121,16 @@ public class RuleManagerImpl implements RuleManager {
     }
 
     @Override
-    public List<SpeakerCommandData> buildRulesForSwitch(SwitchId switchId, DataAdapter adapter) {
+    public List<SpeakerData> buildRulesForSwitch(SwitchId switchId, DataAdapter adapter) {
         Switch sw = adapter.getSwitch(switchId);
-        List<SpeakerCommandData> result = buildServiceRules(sw, adapter);
+        List<SpeakerData> result = buildServiceRules(sw, adapter);
 
         result.addAll(buildFlowRulesForSwitch(switchId, adapter));
 
         return postProcessCommands(result);
     }
 
-    private List<SpeakerCommandData> buildServiceRules(Switch sw, DataAdapter adapter) {
+    private List<SpeakerData> buildServiceRules(Switch sw, DataAdapter adapter) {
         return getServiceRuleGenerators(sw.getSwitchId(), adapter).stream()
                 .flatMap(g -> g.generateCommands(sw).stream())
                 .collect(toList());
@@ -209,7 +209,7 @@ public class RuleManagerImpl implements RuleManager {
         return generators;
     }
 
-    private List<SpeakerCommandData> buildFlowRulesForSwitch(SwitchId switchId, DataAdapter adapter) {
+    private List<SpeakerData> buildFlowRulesForSwitch(SwitchId switchId, DataAdapter adapter) {
         return adapter.getFlowPaths().values().stream()
                 .flatMap(flowPath -> buildFlowRulesForSwitch(switchId, flowPath, adapter).stream())
                 .collect(Collectors.toList());
@@ -218,9 +218,9 @@ public class RuleManagerImpl implements RuleManager {
     /**
      * Builds command data only for switches present in the map. Silently skips all others.
      */
-    private List<SpeakerCommandData> buildFlowRulesForSwitch(
+    private List<SpeakerData> buildFlowRulesForSwitch(
             SwitchId switchId, FlowPath flowPath, DataAdapter adapter) {
-        List<SpeakerCommandData> result = new ArrayList<>();
+        List<SpeakerData> result = new ArrayList<>();
         Flow flow = adapter.getFlow(flowPath.getPathId());
         Switch sw = adapter.getSwitch(switchId);
         FlowTransitEncapsulation encapsulation = adapter.getTransitEncapsulation(flowPath.getPathId());
@@ -252,12 +252,13 @@ public class RuleManagerImpl implements RuleManager {
         return result;
     }
 
-    private List<SpeakerCommandData> buildIngressCommands(Switch sw, FlowPath flowPath, Flow flow,
-            FlowTransitEncapsulation encapsulation, Set<FlowSideAdapter> overlappingIngressAdapters) {
-        List<SpeakerCommandData> ingressCommands = flowRulesFactory.getIngressRuleGenerator(
+    private List<SpeakerData> buildIngressCommands(Switch sw, FlowPath flowPath, Flow flow,
+                                                   FlowTransitEncapsulation encapsulation,
+                                                   Set<FlowSideAdapter> overlappingIngressAdapters) {
+        List<SpeakerData> ingressCommands = flowRulesFactory.getIngressRuleGenerator(
                 flowPath, flow, encapsulation, overlappingIngressAdapters).generateCommands(sw);
-        String ingressMeterCommandUuid = Utils.getCommand(MeterSpeakerCommandData.class, ingressCommands)
-                .map(SpeakerCommandData::getUuid).orElse(null);
+        String ingressMeterCommandUuid = Utils.getCommand(MeterSpeakerData.class, ingressCommands)
+                .map(SpeakerData::getUuid).orElse(null);
 
         List<RuleGenerator> generators = new ArrayList<>();
         generators.add(flowRulesFactory.getInputLldpRuleGenerator(flowPath, flow, overlappingIngressAdapters));
@@ -275,8 +276,8 @@ public class RuleManagerImpl implements RuleManager {
         return ingressCommands;
     }
 
-    private List<SpeakerCommandData> buildEgressCommands(Switch sw, FlowPath flowPath, Flow flow,
-            FlowTransitEncapsulation encapsulation) {
+    private List<SpeakerData> buildEgressCommands(Switch sw, FlowPath flowPath, Flow flow,
+                                                  FlowTransitEncapsulation encapsulation) {
         List<RuleGenerator> generators = new ArrayList<>();
 
         generators.add(flowRulesFactory.getEgressRuleGenerator(flowPath, flow, encapsulation));
@@ -287,7 +288,7 @@ public class RuleManagerImpl implements RuleManager {
         return generateRules(sw, generators);
     }
 
-    private List<SpeakerCommandData> buildTransitCommands(
+    private List<SpeakerData> buildTransitCommands(
             Switch sw, FlowPath flowPath, FlowTransitEncapsulation encapsulation, PathSegment firstSegment,
             PathSegment secondSegment) {
         RuleGenerator generator = flowRulesFactory.getTransitRuleGenerator(
@@ -296,9 +297,9 @@ public class RuleManagerImpl implements RuleManager {
 
     }
 
-    private List<SpeakerCommandData> buildTransitLoopCommands(
+    private List<SpeakerData> buildTransitLoopCommands(
             Switch sw, FlowPath flowPath, Flow flow, FlowTransitEncapsulation encapsulation) {
-        List<SpeakerCommandData> result = new ArrayList<>();
+        List<SpeakerData> result = new ArrayList<>();
 
         flowPath.getSegments().stream()
                 .filter(segment -> segment.getDestSwitchId().equals(flow.getLoopSwitchId()))
@@ -310,7 +311,7 @@ public class RuleManagerImpl implements RuleManager {
         return result;
     }
 
-    private List<SpeakerCommandData> generateRules(Switch sw, List<RuleGenerator> generators) {
+    private List<SpeakerData> generateRules(Switch sw, List<RuleGenerator> generators) {
         return generators.stream()
                 .flatMap(generator -> generator.generateCommands(sw).stream())
                 .collect(Collectors.toList());
