@@ -47,7 +47,6 @@ import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFGroupAdd;
 import org.projectfloodlight.openflow.protocol.OFGroupType;
 import org.projectfloodlight.openflow.protocol.OFMeterMod;
-import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
@@ -120,12 +119,6 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
 
     private static void addStandardDiscoveryActions(IOFSwitch sw, ArrayList<OFAction> actionList) {
         actionList.add(actionSendToController(sw.getOFFactory()));
-        OFVersion version = sw.getOFFactory().getVersion();
-        log.debug("{}.addStandardDiscoveryActions(...) set-field action version check: current={} check={}",
-                VerificationFlowGenerator.class.getName(), version, 0 < version.compareTo(OFVersion.OF_12));
-        if (0 < version.compareTo(OFVersion.OF_12)) {
-            actionList.add(actionSetDstMac(sw.getOFFactory(), convertDpIdToMac(sw.getId())));
-        }
     }
 
     private OFFlowMod buildVerificationRule(IOFSwitch sw, boolean isBroadcast, long cookie,

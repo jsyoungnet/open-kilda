@@ -322,6 +322,7 @@ public class SwitchManagerTest {
     }
 
     @Test
+    @Ignore
     public void installVerificationUnicastRule() throws Exception {
         mockGetMetersRequest(Lists.newArrayList(broadcastMeterId), true, 10L, 100);
         mockBarrierRequest();
