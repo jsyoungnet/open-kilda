@@ -63,6 +63,7 @@ import org.projectfloodlight.openflow.types.TransportPort;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class VerificationFlowGenerator extends MeteredFlowGenerator {
@@ -90,12 +91,13 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
     @Override
     public SwitchFlowTuple generateFlow(IOFSwitch sw) {
         ArrayList<OFAction> actionList = new ArrayList<>();
+        Set<SwitchFeature> switchFeatures = featureDetectorService.detectSwitch(sw);
+
         OFMeterMod meter = generateAddMeterForDefaultRule(sw, meterId, meterRate,
                 config.getSystemMeterBurstSizeInPackets(), config.getDiscoPacketSize());
-        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meterId, sw, actionList);
+        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meterId, sw, switchFeatures, actionList);
 
-        if (broadcast && featureDetectorService.detectSwitch(sw)
-                .contains(SwitchFeature.GROUP_PACKET_OUT_CONTROLLER)) {
+        if (broadcast && switchFeatures.contains(SwitchFeature.GROUP_PACKET_OUT_CONTROLLER)) {
             actionList.add(actionSendToController(sw.getOFFactory()));
         } else {
             addStandardDiscoveryActions(sw, actionList);

@@ -92,7 +92,12 @@ public abstract class MeteredFlowGenerator implements SwitchFlowGenerator {
         return buildMeterMod(sw.getOFFactory(), rate, burstSize, meterId, flags, commandType);
     }
 
-    protected OFInstructionMeter buildMeterInstruction(long meterId, IOFSwitch sw, List<OFAction> actionList) {
+    protected OFInstructionMeter buildMeterInstruction(
+            long meterId, IOFSwitch sw, Set<SwitchFeature> features, List<OFAction> actionList) {
+        if (! features.contains(SwitchFeature.METERS)) {
+            return null;
+        }
+
         OFFactory ofFactory = sw.getOFFactory();
         OFInstructionMeter meterInstruction = null;
         if (meterId != 0L && (config.isOvsMetersEnabled() || !isOvs(sw))) {

@@ -21,6 +21,7 @@ import org.openkilda.floodlight.service.FeatureDetectorService;
 import org.openkilda.floodlight.switchmanager.SwitchManagerConfig;
 import org.openkilda.floodlight.switchmanager.factory.SwitchFlowTuple;
 import org.openkilda.floodlight.switchmanager.factory.generator.MeteredFlowGenerator;
+import org.openkilda.model.SwitchFeature;
 
 import net.floodlightcontroller.core.IOFSwitch;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
@@ -30,6 +31,7 @@ import org.projectfloodlight.openflow.protocol.instruction.OFInstructionMeter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public abstract class LldpFlowGenerator extends MeteredFlowGenerator {
 
@@ -49,7 +51,9 @@ public abstract class LldpFlowGenerator extends MeteredFlowGenerator {
         long meterId = createMeterIdForDefaultRule(cookie).getValue();
         OFMeterMod meter = generateAddMeterForDefaultRule(sw, meterId, config.getLldpRateLimit(),
                 config.getLldpMeterBurstSizeInPackets(), config.getLldpPacketSize());
-        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meter.getMeterId(), sw, actionList);
+        Set<SwitchFeature> switchFeatures = featureDetectorService.detectSwitch(sw);
+        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(
+                meter.getMeterId(), sw, switchFeatures, actionList);
 
         OFFlowMod flowMod = getLldpFlowMod(sw, ofInstructionMeter, actionList);
         if (flowMod == null) {

@@ -77,7 +77,7 @@ public class UnicastVerificationVxlanRuleGenerator extends MeteredFlowGenerator 
         long meterRate = config.getUnicastRateLimit();
         OFMeterMod meter = generateAddMeterForDefaultRule(sw, meterId, meterRate,
                 config.getSystemMeterBurstSizeInPackets(), config.getDiscoPacketSize());
-        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meterId, sw, actionList);
+        OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meterId, sw, features, actionList);
 
         OFFlowMod flowMod = buildUnicastVerificationRuleVxlan(sw, features, cookie, ofInstructionMeter, actionList);
 
