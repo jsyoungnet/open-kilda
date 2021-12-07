@@ -1037,6 +1037,7 @@ public class SwitchManager implements IFloodlightModule, IFloodlightService, ISw
                 .setActions(Lists.newArrayList(
                         actionSetDstMac(sw, convertDpIdToMac(sw.getId())),
                         actionSendToController(sw)))
+                .setWatchGroup(OFGroup.ANY)
                 .build());
 
         TransportPort udpPort = TransportPort.of(LATENCY_PACKET_UDP_PORT);
@@ -1047,6 +1048,7 @@ public class SwitchManager implements IFloodlightModule, IFloodlightService, ISw
         bucketList.add(ofFactory
                 .buildBucket()
                 .setActions(latencyActions)
+                .setWatchGroup(OFGroup.ANY)
                 .build());
 
         return ofFactory.buildGroupAdd()
