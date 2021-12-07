@@ -20,7 +20,6 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.openkilda.model.SwitchFeature.BFD;
 import static org.openkilda.model.SwitchFeature.BFD_REVIEW;
-import static org.openkilda.model.SwitchFeature.GROUPS;
 import static org.openkilda.model.SwitchFeature.GROUP_PACKET_OUT_CONTROLLER;
 import static org.openkilda.model.SwitchFeature.HALF_SIZE_METADATA;
 import static org.openkilda.model.SwitchFeature.INACCURATE_METER;
@@ -106,7 +105,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
                         .build(),
                 OFVersion.OF_13, 255);
         discoveryCheck(sw, ImmutableSet.of(
-                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS));
+                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG));
     }
 
     @Test
@@ -118,7 +117,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
                         .build(),
                 OFVersion.OF_13, 255);
         discoveryCheck(sw, ImmutableSet.of(
-                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS,
+                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG,
                 KILDA_OVS_COPY_FIELD, KILDA_OVS_SWAP_FIELD, KILDA_OVS_PUSH_POP_MATCH_VXLAN));
     }
 
@@ -131,7 +130,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
                         .build(),
                 OFVersion.OF_13, 255);
         discoveryCheck(sw, ImmutableSet.of(
-                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS,
+                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG,
                 KILDA_OVS_COPY_FIELD, KILDA_OVS_SWAP_FIELD));
     }
 
@@ -144,7 +143,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
                         .build(),
                 OFVersion.OF_15, 255);
         discoveryCheck(sw, ImmutableSet.of(
-                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS));
+                GROUP_PACKET_OUT_CONTROLLER, MATCH_UDP_PORT, MULTI_TABLE, PKTPS_FLAG, RESET_COUNTS_FLAG));
     }
 
     @Test
@@ -185,7 +184,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         discoveryCheck(sw, ImmutableSet.of(
                 BFD, GROUP_PACKET_OUT_CONTROLLER, HALF_SIZE_METADATA, MATCH_UDP_PORT, MAX_BURST_COEFFICIENT_LIMITATION,
                 METERS, MULTI_TABLE, NOVIFLOW_COPY_FIELD, NOVIFLOW_PUSH_POP_VXLAN, NOVIFLOW_SWAP_ETH_SRC_ETH_DST, LAG,
-                PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS));
+                PKTPS_FLAG, RESET_COUNTS_FLAG));
     }
 
     @Test
@@ -201,7 +200,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         discoveryCheck(sw, ImmutableSet.of(
                 BFD, GROUP_PACKET_OUT_CONTROLLER, HALF_SIZE_METADATA, MATCH_UDP_PORT, MAX_BURST_COEFFICIENT_LIMITATION,
                 METERS, MULTI_TABLE, NOVIFLOW_COPY_FIELD, NOVIFLOW_PUSH_POP_VXLAN, NOVIFLOW_SWAP_ETH_SRC_ETH_DST, LAG,
-                PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS));
+                PKTPS_FLAG, RESET_COUNTS_FLAG));
     }
 
     @Test
@@ -217,7 +216,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         discoveryCheck(sw, ImmutableSet.of(
                 BFD, GROUP_PACKET_OUT_CONTROLLER, HALF_SIZE_METADATA, MATCH_UDP_PORT, MAX_BURST_COEFFICIENT_LIMITATION,
                 METERS, MULTI_TABLE, NOVIFLOW_COPY_FIELD, NOVIFLOW_PUSH_POP_VXLAN, NOVIFLOW_SWAP_ETH_SRC_ETH_DST, LAG,
-                PKTPS_FLAG, RESET_COUNTS_FLAG, GROUPS));
+                PKTPS_FLAG, RESET_COUNTS_FLAG));
     }
 
     @Test
@@ -231,7 +230,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         discoveryCheck(sw,
                 ImmutableSet.of(GROUP_PACKET_OUT_CONTROLLER, BFD, METERS, RESET_COUNTS_FLAG, MATCH_UDP_PORT, LAG,
                         MAX_BURST_COEFFICIENT_LIMITATION, MULTI_TABLE, NOVIFLOW_PUSH_POP_VXLAN, INACCURATE_METER,
-                        HALF_SIZE_METADATA, NOVIFLOW_SWAP_ETH_SRC_ETH_DST, GROUPS));
+                        HALF_SIZE_METADATA, NOVIFLOW_SWAP_ETH_SRC_ETH_DST));
     }
 
     @Test
@@ -246,7 +245,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
                 OFVersion.OF_13, 7);
         discoveryCheck(sw, ImmutableSet.of(
                 GROUP_PACKET_OUT_CONTROLLER, BFD, METERS, RESET_COUNTS_FLAG, INACCURATE_METER, MATCH_UDP_PORT, LAG,
-                MULTI_TABLE, NOVIFLOW_PUSH_POP_VXLAN, HALF_SIZE_METADATA, NOVIFLOW_SWAP_ETH_SRC_ETH_DST, GROUPS));
+                MULTI_TABLE, NOVIFLOW_PUSH_POP_VXLAN, HALF_SIZE_METADATA, NOVIFLOW_SWAP_ETH_SRC_ETH_DST));
     }
 
     @Test
@@ -260,7 +259,7 @@ public class FeatureDetectorServiceTest extends EasyMockSupport {
         discoveryCheck(sw,
                 ImmutableSet.of(GROUP_PACKET_OUT_CONTROLLER, BFD, METERS, RESET_COUNTS_FLAG, MATCH_UDP_PORT, LAG,
                         MAX_BURST_COEFFICIENT_LIMITATION, MULTI_TABLE, NOVIFLOW_PUSH_POP_VXLAN, HALF_SIZE_METADATA,
-                        NOVIFLOW_SWAP_ETH_SRC_ETH_DST, GROUPS));
+                        NOVIFLOW_SWAP_ETH_SRC_ETH_DST));
     }
 
     private void discoveryCheck(IOFSwitch sw, Set<SwitchFeature> expectedFeatures) {

@@ -15,8 +15,6 @@
 
 package org.openkilda.floodlight.feature;
 
-import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
-
 import org.openkilda.model.SwitchFeature;
 
 import net.floodlightcontroller.core.IOFSwitch;
@@ -35,14 +33,6 @@ public class GroupsFeature extends AbstractFeature {
             return empty;
         }
 
-        if (containsIgnoreCase(sw.getSwitchDescription().getManufacturerDescription(), CENTEC_MANUFACTURED)) {
-            return empty;
-        }
-
-        if (containsIgnoreCase(sw.getSwitchDescription().getManufacturerDescription(), ACTON_MANUFACTURED)) {
-            return empty;
-        }
-
-        return Optional.of(SwitchFeature.GROUPS);
+        return empty;
     }
 }

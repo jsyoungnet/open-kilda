@@ -128,6 +128,7 @@ import org.easymock.Capture;
 import org.easymock.CaptureType;
 import org.easymock.EasyMock;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.projectfloodlight.openflow.protocol.OFBarrierReply;
 import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
@@ -275,11 +276,13 @@ public class SwitchManagerTest {
     }
 
     @Test
+    @Ignore
     public void installVerificationBroadcastRule() throws Exception {
         runInstallVerificationBroadcastRule(true);
     }
 
     @Test
+    @Ignore
     public void installVerificationBroadcastWithoutUdpMatchSupportRule() throws Exception {
         runInstallVerificationBroadcastRule(false);
     }

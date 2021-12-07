@@ -94,11 +94,9 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
                 config.getSystemMeterBurstSizeInPackets(), config.getDiscoPacketSize());
         OFInstructionMeter ofInstructionMeter = buildMeterInstruction(meterId, sw, actionList);
 
-        OFGroupAdd group = null;
         if (broadcast && featureDetectorService.detectSwitch(sw)
                 .contains(SwitchFeature.GROUP_PACKET_OUT_CONTROLLER)) {
-            group = getInstallRoundTripLatencyGroupInstruction(sw);
-            actionList.add(sw.getOFFactory().actions().group(group.getGroup()));
+            actionList.add(actionSendToController(sw.getOFFactory()));
         } else {
             addStandardDiscoveryActions(sw, actionList);
         }
@@ -109,7 +107,6 @@ public class VerificationFlowGenerator extends MeteredFlowGenerator {
                 .sw(sw)
                 .flow(flowMod)
                 .meter(meter)
-                .group(group)
                 .build();
     }
 
