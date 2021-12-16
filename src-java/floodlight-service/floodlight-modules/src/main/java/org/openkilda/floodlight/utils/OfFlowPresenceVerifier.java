@@ -27,16 +27,23 @@ import org.projectfloodlight.openflow.protocol.action.OFActionSetField;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionWriteActions;
+import org.projectfloodlight.openflow.protocol.match.Match;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.protocol.match.MatchFields;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxm;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVid;
 import org.projectfloodlight.openflow.protocol.oxm.OFOxmVlanVidMasked;
 import org.projectfloodlight.openflow.types.DatapathId;
+import org.projectfloodlight.openflow.types.Masked;
+import org.projectfloodlight.openflow.types.OFValueType;
+import org.projectfloodlight.openflow.types.OFVlanVidMatch;
 import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.types.U64;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -125,10 +132,70 @@ public class OfFlowPresenceVerifier {
         if (! Objects.equals(expectEntry.getFlags(), tableEntry.getFlags())) {
             return false;
         }
-        if (! Objects.equals(expectEntry.getMatch(), tableEntry.getMatch())) {
+        if (! isMatchEquals(expectEntry.getMatch(), tableEntry.getMatch())) {
             return false;
         }
         return isInstructionsEquals(expectEntry.getInstructions(), tableEntry.getInstructions());
+    }
+
+    private boolean isMatchEquals(Match expectedMatch, Match actualMatch) {
+        Set<MatchFields> all = new HashSet<>();
+        for (MatchField<?> field : expectedMatch.getMatchFields()) {
+            all.add(field.id);
+
+            boolean isFieldMatch;
+            if (expectedMatch.isExact(field)) {
+                isFieldMatch = isMatchExactFieldEquals(expectedMatch.get(field), actualMatch, field);
+            } else {
+                isFieldMatch = isMatchMaskedFieldEquals(
+                        expectedMatch.getMasked(field), actualMatch, field);
+            }
+            if (! isFieldMatch) {
+                return false;
+            }
+        }
+
+        // lookup for extra fields
+        for (MatchField<?> field : actualMatch.getMatchFields()) {
+            if (!all.contains(field.id)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean isMatchExactFieldEquals(
+            OFValueType<?> expectedValue, Match actualMatch, MatchField<?> field) {
+        if (! actualMatch.isExact(field)) {
+            return false;
+        }
+        OFValueType<?> actualValue = actualMatch.get(field);
+        return isMatchFieldValueEquals(expectedValue, actualValue);
+    }
+
+    private boolean isMatchMaskedFieldEquals(
+            Masked<?> expectedValue, Match actualMatch, MatchField<?> field) {
+        if (actualMatch.isExact(field)) {
+            return false;
+        }
+        Masked<?> actualValue = actualMatch.getMasked(field);
+        if (actualValue == null) {
+            return false;
+        }
+        return isMatchFieldValueEquals(expectedValue.getValue(), actualValue.getValue())
+                && isMatchFieldValueEquals(expectedValue.getMask(), actualValue.getMask());
+    }
+
+    private boolean isMatchFieldValueEquals(OFValueType<?> expected, OFValueType<?> actual) {
+        if (Objects.equals(expected, actual)) {
+            return true;
+        }
+        if (expected instanceof OFVlanVidMatch && actual instanceof OFVlanVidMatch) {
+            // TODO add switch feature that will allow to distinguish switches with this issue
+            return ((OFVlanVidMatch) expected).getVlan() == ((OFVlanVidMatch) actual).getVlan();
+        }
+        return false;
     }
 
     private boolean isInstructionsEquals(List<OFInstruction> expectedSeq, List<OFInstruction> actualSeq) {

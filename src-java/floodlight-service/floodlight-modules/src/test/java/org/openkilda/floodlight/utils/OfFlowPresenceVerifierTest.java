@@ -38,6 +38,7 @@ import org.projectfloodlight.openflow.types.TableId;
 import org.projectfloodlight.openflow.types.U64;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -66,18 +67,18 @@ public class OfFlowPresenceVerifierTest extends EasyMockSupport {
 
     @Test
     public void inaccurateSetFieldVlanVidActionNegative() {
-        OfFlowPresenceVerifier presenceVerifier = testInaccurateSetFieldVlanVidAction(Collections.emptySet());
+        OfFlowPresenceVerifier presenceVerifier = verifyInaccurateSetFieldVlanVidAction(Collections.emptySet());
         Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
     }
 
     @Test
     public void inaccurateSetFieldVlanVidActionPositive() {
-        OfFlowPresenceVerifier presenceVerifier = testInaccurateSetFieldVlanVidAction(Collections.singleton(
+        OfFlowPresenceVerifier presenceVerifier = verifyInaccurateSetFieldVlanVidAction(Collections.singleton(
                 SwitchFeature.INACCURATE_SET_VLAN_VID_ACTION));
         Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
     }
 
-    public OfFlowPresenceVerifier testInaccurateSetFieldVlanVidAction(Set<SwitchFeature> switchFeatures) {
+    private OfFlowPresenceVerifier verifyInaccurateSetFieldVlanVidAction(Set<SwitchFeature> switchFeatures) {
         OFFactory of = new OFFactoryVer13();
         final int priority = 1000;
         final U64 cookie = U64.of(2000);
@@ -110,6 +111,220 @@ public class OfFlowPresenceVerifierTest extends EasyMockSupport {
 
         OfFlowPresenceVerifier presenceVerifier = new OfFlowPresenceVerifier(
                 dumpProducer, Collections.singletonList(expected), switchFeatures);
+
+        Assert.assertTrue(presenceVerifier.getFinish().isDone());
+        return presenceVerifier;
+    }
+
+    @Test
+    public void testVlanBitInMatchExactMatch() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMismatch() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1023))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMissingInRequest() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofRawVid((short) 1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMissingInResponse() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofRawVid((short) 1024))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMaskedMatch() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMaskedMismatch() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xfe))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMissingMaskedInRequest() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofRawVid((short) 0xff))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testVlanBitInMatchMissingMaskedInResponse() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofRawVid((short) 0xff))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertTrue(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testMatchComparisonExactVsMasked() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setMasked(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024), OFVlanVidMatch.ofVlan(0xff))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testMatchComparisonMissingField() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
+    }
+
+    @Test
+    public void testMatchComparisonExtraField() {
+        OFFactory of = new OFFactoryVer13();
+        Match requestMatch = of.buildMatch()
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+        Match responseMatch = of.buildMatch()
+                .setExact(MatchField.IN_PORT, OFPort.of(5))
+                .setExact(MatchField.VLAN_VID, OFVlanVidMatch.ofVlan(1024))
+                .build();
+
+        OfFlowPresenceVerifier presenceVerifier = verifyVlanPresenceBitInMatchInaccuracy(
+                of, requestMatch, responseMatch);
+        Assert.assertFalse(presenceVerifier.getMissing().isEmpty());
+    }
+
+    private OfFlowPresenceVerifier verifyVlanPresenceBitInMatchInaccuracy(OFFactory of, Match expected, Match actual) {
+        int priority = 1000;
+        U64 cookie = U64.of(2000);
+        OFFlowStatsEntry switchResponseEntry = of.buildFlowStatsEntry()
+                .setTableId(TableId.of(0))
+                .setPriority(priority)
+                .setCookie(cookie)
+                .setMatch(actual)
+                .build();
+
+        CompletableFuture<List<OFFlowStatsEntry>> switchFlowStatsResponse = CompletableFuture.completedFuture(
+                Collections.singletonList(switchResponseEntry));
+        EasyMock.expect(dumpProducer.getTableRequests()).andReturn(Collections.singletonList(switchFlowStatsResponse));
+
+        OFFlowAdd controllerCommand = of.buildFlowAdd()
+                .setPriority(priority)
+                .setCookie(cookie)
+                .setMatch(expected)
+                .build();
+
+        replayAll();
+
+        OfFlowPresenceVerifier presenceVerifier = new OfFlowPresenceVerifier(
+                dumpProducer, Collections.singletonList(controllerCommand), new HashSet<>());
 
         Assert.assertTrue(presenceVerifier.getFinish().isDone());
         return presenceVerifier;
