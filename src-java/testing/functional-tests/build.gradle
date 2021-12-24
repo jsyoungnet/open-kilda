@@ -118,7 +118,7 @@ testlogger {
     showSkipped true
     showFailed true
     showStandardStreams true
-    showPassedStandardStreams false
+    showPassedStandardStreams true
     showSkippedStandardStreams false
     showFailedStandardStreams true
 }
