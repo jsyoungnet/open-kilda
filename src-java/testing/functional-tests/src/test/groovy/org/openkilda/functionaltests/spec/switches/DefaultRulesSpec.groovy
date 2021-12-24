@@ -30,6 +30,7 @@ import org.openkilda.model.cookie.Cookie
 import org.openkilda.model.cookie.CookieBase.CookieType
 import org.openkilda.testing.model.topology.TopologyDefinition.Switch
 
+import spock.lang.Ignore
 import spock.lang.Unroll
 
 class DefaultRulesSpec extends HealthCheckSpecification {
@@ -218,6 +219,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
     }
 
     @Tidy
+    @Ignore
     @Tags([TOPOLOGY_DEPENDENT, SMOKE, SMOKE_SWITCHES])
     def "Able to install default rules on #sw.hwSwString [install-action=INSTALL_DEFAULTS]"() {
         given: "A switch without any rules"
@@ -253,6 +255,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
     }
 
     @Tidy
+    @Ignore
     @Tags([TOPOLOGY_DEPENDENT, SMOKE, SMOKE_SWITCHES])
     def "Able to delete default rule from #sw.hwSwString[delete-action=#data.deleteRulesAction]"(
             Map data, Switch sw) {
@@ -318,6 +321,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
     }
 
     @Tidy
+    @Ignore
     @Tags([TOPOLOGY_DEPENDENT, SMOKE_SWITCHES])
     def "Able to delete default multitable rule from #sw.hwSwString [delete-action=#data.deleteRulesAction]"(Map data, Switch sw) {
         when: "Delete rule from the switch"
@@ -387,6 +391,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
     }
 
     @Tidy
+    @Ignore
     @Tags([TOPOLOGY_DEPENDENT, SMOKE_SWITCHES])
     def "Able to delete/install the server42 Flow RTT turning rule on a switch"() {
         setup: "Select a switch which support server42 turning rule"
@@ -435,6 +440,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
     }
 
     @Tidy
+    @Ignore
     @Tags([TOPOLOGY_DEPENDENT, SMOKE_SWITCHES])
     def "Able to delete/install the server42 ISL RTT turning rule on a switch"() {
         setup: "Select a switch which support server42 turning rule"
