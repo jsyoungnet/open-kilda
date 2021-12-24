@@ -85,7 +85,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
         assertThat(defaultRules*.cookie.sort()).containsExactlyInAnyOrder(*sw.defaultCookies.sort())
 
         northbound.deleteSwitchRules(sw.dpId, DeleteRulesAction.DROP_ALL)
-        Wrappers.benchmark("test delete multiTable rule") {
+        Wrappers.benchmark("test delete rule") {
             Wrappers.wait(RULES_DELETION_TIME) { assert northbound.getSwitchRules(sw.dpId).flowEntries.empty }
         }
 
