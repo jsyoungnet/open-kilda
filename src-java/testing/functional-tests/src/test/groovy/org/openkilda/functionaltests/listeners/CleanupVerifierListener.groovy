@@ -68,6 +68,7 @@ class CleanupVerifierListener extends AbstractSpringListener {
                 def swProps = northbound.getSwitchProperties(sw.dpId)
                 assert swProps.multiTable == useMultitable
                 def s42Config = sw.prop
+                assert swProps.supportedTransitEncapsulation.sort() == ["transit_vlan", "vxlan"].sort()
                 if (s42Config) {
                     assert swProps.server42FlowRtt == s42Config.server42FlowRtt
                     assert swProps.server42Port == s42Config.server42Port
