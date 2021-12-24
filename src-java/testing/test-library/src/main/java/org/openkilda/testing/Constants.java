@@ -28,7 +28,7 @@ public final class Constants {
     public static final Integer FLOW_CRUD_TIMEOUT = 30;
     public static final Integer TOPOLOGY_DISCOVERING_TIME = 120;
     public static final Integer SWITCHES_ACTIVATION_TIME = 10;
-    public static final Integer RULES_DELETION_TIME = 10;
+    public static final Integer RULES_DELETION_TIME = 15;
     public static final Integer RULES_INSTALLATION_TIME = 25;
     public static final Integer STATS_LOGGING_TIMEOUT = 80;
     public static final Integer FL_DUMP_INTERVAL = 60; //floodlight.dump.interval defaults to 60

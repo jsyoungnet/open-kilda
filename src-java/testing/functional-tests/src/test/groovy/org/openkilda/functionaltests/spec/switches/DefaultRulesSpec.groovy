@@ -207,9 +207,9 @@ class DefaultRulesSpec extends HealthCheckSpecification {
                                 cookie            : Cookie.MULTITABLE_TRANSIT_DROP_COOKIE
                         ]
                 ],
-                getTopology().getActiveSwitches().findAll {
-                    it.noviflow || it.virtual
-                }.unique { activeSw -> activeSw.description }
+                getTopology().getActiveSwitches().find {
+                    it.dpId.toString() == "00:00:00:22:3d:5a:04:87"
+                }
         ].combinations()
     }
 
