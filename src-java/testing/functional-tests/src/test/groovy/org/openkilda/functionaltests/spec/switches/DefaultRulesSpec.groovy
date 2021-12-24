@@ -84,7 +84,9 @@ class DefaultRulesSpec extends HealthCheckSpecification {
         assertThat(defaultRules*.cookie.sort()).containsExactlyInAnyOrder(*sw.defaultCookies.sort())
 
         northbound.deleteSwitchRules(sw.dpId, DeleteRulesAction.DROP_ALL)
-        Wrappers.wait(RULES_DELETION_TIME) { assert northbound.getSwitchRules(sw.dpId).flowEntries.empty }
+        Wrappers.benchmark("test delete multiTable rule") {
+            Wrappers.wait(RULES_DELETION_TIME) { assert northbound.getSwitchRules(sw.dpId).flowEntries.empty }
+        }
 
         when: "Install rules on the switch"
         def installedRules = northbound.installSwitchRules(sw.dpId, data.installRulesAction)
@@ -163,7 +165,9 @@ class DefaultRulesSpec extends HealthCheckSpecification {
         assert defaultRules*.cookie.sort() == sw.defaultCookies.sort()
 
         northbound.deleteSwitchRules(sw.dpId, DeleteRulesAction.DROP_ALL)
-        Wrappers.wait(RULES_DELETION_TIME) { assert northbound.getSwitchRules(sw.dpId).flowEntries.empty }
+        Wrappers.benchmark("test delete multiTable rule") {
+            Wrappers.wait(RULES_DELETION_TIME) { assert northbound.getSwitchRules(sw.dpId).flowEntries.empty }
+        }
 
         when: "Install rules on the switch"
         def installedRules = northbound.installSwitchRules(sw.dpId, data.installRulesAction)
