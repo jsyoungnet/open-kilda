@@ -110,6 +110,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
                     .containsExactlyInAnyOrder(*defaultRules*.cookie.sort())
             assert northbound.getActiveLinks().size() == topology.islsForActiveSwitches.size() * 2
         }
+        sleep(2000)
 
         where:
         [data, sw] << [
@@ -187,6 +188,7 @@ class DefaultRulesSpec extends HealthCheckSpecification {
             assert northbound.getSwitchRules(sw.dpId).flowEntries.size() == defaultRules.size()
             assert northbound.getActiveLinks().size() == topology.islsForActiveSwitches.size() * 2
         }
+        sleep(1000)
 
         where:
         [data, sw] << [
