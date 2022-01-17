@@ -337,6 +337,6 @@ export class SwitchDatatableComponent implements OnInit, OnChanges,OnDestroy,Aft
     this.clipboardService.copyFromContent(copyData);
   }
 
-
+ 
 
 }

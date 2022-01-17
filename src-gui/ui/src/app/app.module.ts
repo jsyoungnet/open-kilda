@@ -102,6 +102,7 @@ import { SamlListTableComponent } from './modules/settings/saml-list-table/saml-
 import { SwitchupdatemodalComponent } from './common/components/switchupdatemodal/switchupdatemodal.component';
 import { UseractivityListComponent } from './modules/useractivity/useractivity-list/useractivity-list.component';
 import { FlowPingModalComponent } from './common/components/flow-ping-modal/flow-ping-modal.component';
+import { CreateLagPortComponent } from './modules/switches/create-lag-port/create-lag-port.component';
 
 @NgModule({
   declarations: [
@@ -190,6 +191,7 @@ import { FlowPingModalComponent } from './common/components/flow-ping-modal/flow
     SwitchupdatemodalComponent,
     UseractivityListComponent,
     FlowPingModalComponent,
+    CreateLagPortComponent,
   ],
   imports: [
     HttpClientModule,
@@ -234,6 +236,7 @@ import { FlowPingModalComponent } from './common/components/flow-ping-modal/flow
     IslmaintenancemodalComponent,
     SwitchupdatemodalComponent,
     FlowPingModalComponent,
+    CreateLagPortComponent
   ]
 })
 export class AppModule { }

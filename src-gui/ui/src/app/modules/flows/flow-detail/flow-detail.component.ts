@@ -489,7 +489,7 @@ export class FlowDetailComponent implements OnInit {
         
       },
       error => {
-        var errorMsg = error && error.error && error.error['error-auxiliary-message'] ? error.error['error-auxiliary-message']: 'No Flow found';
+        var errorMsg = error && error.error && error.error[''] ? error.error['error-auxiliary-message']: 'No Flow found';
         //this.toaster.error(errorMsg, "Error");
        }
     )
@@ -596,7 +596,7 @@ export class FlowDetailComponent implements OnInit {
         },100);
       },
       error => {
-        var errorMsg = error && error.error && error.error['error-auxiliary-message'] ? error.error['error-auxiliary-message']: 'No Flow found';
+        var errorMsg = error && error.error && error.error[''] ? error.error['error-auxiliary-message']: 'No Flow found';
         this.toaster.error(errorMsg, "Error");
         this._location.back();
         this.loaderService.hide();

@@ -9,6 +9,9 @@ import { NgxSpinnerService } from "ngx-spinner";
 import { LoaderService } from "../../../common/services/loader.service";
 import { Title } from '@angular/platform-browser';
 import { CommonService } from 'src/app/common/services/common.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { CreateLagPortComponent } from '../create-lag-port/create-lag-port.component';
+import { MessageObj } from 'src/app/common/constants/constants';
 
 @Component({
   selector: 'app-port-list',
@@ -42,6 +45,7 @@ export class PortListComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
     private loaderService: LoaderService,
     private titleService: Title,
     private commonService:CommonService,
+    private modalService: NgbModal,
   ) {
     this.hasStoreSetting = localStorage.getItem('hasSwtStoreSetting') == '1' ? true : false;
   }
@@ -129,7 +133,7 @@ export class PortListComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         this.ngAfterViewInit();
         this.loadPorts= false;
         localStorage.setItem('switchPortDetail', JSON.stringify(data));
-        this.switchPortDataSet = data;
+        this.switchPortDataSet = data; 
         for(let i = 0; i<this.switchPortDataSet.length; i++){
           if(this.switchPortDataSet[i].port_number === '' || this.switchPortDataSet[i].port_number === undefined){
               this.switchPortDataSet[i].port_number = '-';
@@ -292,5 +296,30 @@ export class PortListComponent implements OnInit, AfterViewInit, OnDestroy, OnCh
         }
       }
   }
+  createLagPort(){
+    const modalRef = this.modalService.open(CreateLagPortComponent,{ size: 'lg',windowClass:'modal-port slideInUp'});
+      modalRef.componentInstance.emitService.subscribe((res)=>{
+        let result = res.map(i=>Number(i));
+        this.loaderService.show(MessageObj.apply_changes);
+        this.switchService.createLagLogicalPort({port_numbers:result},this.switch_id).subscribe(res=>{
+         if(res){
+            this.toastr.success(MessageObj.create_lag_port,'Success');
+          this.loaderService.hide();
+          modalRef.componentInstance.activeModal.close(true);  
+          this.portListData();
+         }
+        
+        },  error => {
+          this.loaderService.hide();
+          modalRef.componentInstance.activeModal.close(true);
+            var message = (error.error['error-auxiliary-message']) ? error.error['error-auxiliary-message'] :error.error['error-description'];
+            this.toastr.error(message,'Error');
+        });
+      })
+       
+      
+  }
+  
+
 }
 

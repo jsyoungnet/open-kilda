@@ -278,6 +278,26 @@ export class PortDetailsComponent implements OnInit, OnDestroy{
    
   }
 
+  deleteLogicalPort(){
+    const modalRef = this.modalService.open(ModalconfirmationComponent);
+    modalRef.componentInstance.title = "Delete Port";
+    modalRef.componentInstance.content = 'Are you sure you want to perform delete action ?';    
+    modalRef.result.then((response) => {
+      if(response && response == true){
+        this.switchService.deleteLagLogicalPort(this.retrievedSwitchObject.switch_id,this.portDataObject.port_number).subscribe(res=>{
+          modalRef.close();
+          this.toastr.success(MessageObj.port_deleted, "Success!");
+          this.router.navigate(['/switches/details/'+ this.retrievedSwitchObject.switch_id])
+        },  error => {
+          this.loaderService.hide();
+            var message = (error.error['error-auxiliary-message']) ? error.error['error-auxiliary-message'] :error.error['error-description'];
+            this.toastr.error(message,'Error');
+        })
+      }
+    })
+   
+  }
+
   ngOnDestroy(){
     localStorage.setItem('portLoaderEnabled',"1");
   }
