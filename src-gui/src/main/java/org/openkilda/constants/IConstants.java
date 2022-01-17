@@ -17,10 +17,7 @@ package org.openkilda.constants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,15 +43,13 @@ public abstract class IConstants {
     
     private static String prefix;
     
+    private static final Properties properties = new Properties();
+    
     static {
-        Properties p = new Properties();
         try {
-            Resource resource = new ClassPathResource(FILE_PATH_PREFIX + APPLICATION_PROPERTIES_FILE);
-            if (!resource.exists()) {
-                resource = new ClassPathResource(APPLICATION_PROPERTIES_FILE);
-            }
-            p.load(new FileReader(resource.getFile()));
-            prefix = p.getProperty("opentsdb.metric.prefix");
+            ClassLoader loader = Thread.currentThread().getContextClassLoader();
+            properties.load(loader.getResourceAsStream(APPLICATION_PROPERTIES_FILE));
+            prefix = properties.getProperty("opentsdb.metric.prefix");
         } catch (IOException e) {
             LOGGER.error("Error occurred while metric prefix getting propetry", e);
         }
@@ -199,6 +194,9 @@ public abstract class IConstants {
         public static final String UPDATE_SWITCH_LOCATION = VERSION_TWO + "/switches/{switch_id}";
         public static final String GET_LINK_BFD_PROPERTIES = VERSION_TWO 
                 + "/links/{src-switch}_{src-port}/{dst-switch}_{dst-port}/bfd";
+        public static final String SWITCH_LOGICAL_PORT = VERSION_TWO + "/switches/{switch_id}/lags";
+        public static final String DELETE_SWITCH_LOGICAL_PORT = VERSION_TWO 
+                + "/switches/{switch_id}/lags/{logical_port_number}";
     }
     
     public final class OpenTsDbUrl {
@@ -335,6 +333,10 @@ public abstract class IConstants {
         public static final String ISL_UPDATE_BFD_PROPERTIES = "isl_update_bfd_properties";
         
         public static final String ISL_DELETE_BFD = "isl_delete_bfd";
+        
+        public static final String SW_CREATE_LOGICAL_PORT = "sw_create_logical_port";
+        
+        public static final String SW_DELETE_LOGICAL_PORT = "sw_delete_logical_port";
     }
 
     public final class Settings {

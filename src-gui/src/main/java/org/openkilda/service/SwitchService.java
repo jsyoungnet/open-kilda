@@ -40,6 +40,7 @@ import org.openkilda.model.PopLocation;
 import org.openkilda.model.SwitchDiscrepancy;
 import org.openkilda.model.SwitchInfo;
 import org.openkilda.model.SwitchLocation;
+import org.openkilda.model.SwitchLogicalPort;
 import org.openkilda.model.SwitchMeter;
 import org.openkilda.model.SwitchProperty;
 import org.openkilda.model.SwitchStatus;
@@ -610,6 +611,14 @@ public class SwitchService {
 
     public String deleteLinkBfd(String srcSwitch, String srcPort, String dstSwitch, String dstPort) {
         return switchIntegrationService.deleteLinkBfd(srcSwitch, srcPort, dstSwitch, dstPort);
+    }
+    
+    public SwitchLogicalPort createLogicalPort(String switchId, SwitchLogicalPort switchLogicalPort) {
+        return switchIntegrationService.createLogicalPort(switchId, switchLogicalPort);
+    }
+    
+    public SwitchLogicalPort deleteLogicalPort(String switchId, String logicalPortNumber) {
+        return switchIntegrationService.deleteLogicalPort(switchId, logicalPortNumber);
     }
 
 }
