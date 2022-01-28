@@ -100,4 +100,8 @@ public interface FlowResourcesConfig extends Serializable {
     @Key("flow.group-id.max")
     @Default("4000")
     int getMaxGroupId();
+
+    @Key("flow.group-id.pools.cache.size")
+    @Default("128")
+    int getPoolsCacheSizeMirrorGroupId();
 }

@@ -32,6 +32,7 @@ import org.openkilda.persistence.PersistenceManager;
 import org.openkilda.persistence.exceptions.ConstraintViolationException;
 import org.openkilda.persistence.repositories.FlowCookieRepository;
 import org.openkilda.persistence.repositories.FlowMeterRepository;
+import org.openkilda.persistence.repositories.MirrorGroupRepository;
 import org.openkilda.persistence.repositories.RepositoryFactory;
 import org.openkilda.persistence.tx.TransactionManager;
 import org.openkilda.wfm.share.flow.resources.FlowResources.PathResources;
@@ -58,12 +59,15 @@ public class FlowResourcesManager {
     private final TransactionManager transactionManager;
     private final FlowCookieRepository flowCookieRepository;
     private final FlowMeterRepository flowMeterRepository;
+    private final MirrorGroupRepository mirrorGroupRepository;
 
     private final PoolManager<FlowCookie> cookiePool;
-    private final MirrorGroupIdPool mirrorGroupIdPool;
 
     private final LRUMap<SwitchId, PoolManager<FlowMeter>> meterIdPools;
     private final PoolManager.PoolConfig meterIdPoolConfig;
+
+    private final LRUMap<SwitchId, PoolManager<MirrorGroup>> groupIdPools;
+    private final PoolManager.PoolConfig groupIdPoolConfig;
 
     private final Map<FlowEncapsulationType, EncapsulationResourcesProvider> encapsulationResourcesProviders;
 
@@ -73,6 +77,7 @@ public class FlowResourcesManager {
         RepositoryFactory repositoryFactory = persistenceManager.getRepositoryFactory();
         flowMeterRepository = repositoryFactory.createFlowMeterRepository();
         flowCookieRepository = repositoryFactory.createFlowCookieRepository();
+        mirrorGroupRepository = repositoryFactory.createMirrorGroupRepository();
 
         PoolConfig cookiePoolConfig = new PoolConfig(
                 config.getMinFlowCookie(), config.getMaxFlowCookie(),
@@ -84,8 +89,10 @@ public class FlowResourcesManager {
         meterIdPoolConfig = new PoolManager.PoolConfig(
                 config.getMinFlowMeterId(), config.getMaxFlowMeterId(), config.getPoolChunksCountMeterId());
 
-        this.mirrorGroupIdPool = new MirrorGroupIdPool(persistenceManager,
-                new GroupId(config.getMinGroupId()), new GroupId(config.getMaxGroupId()), POOL_SIZE);
+        groupIdPools = new LRUMap<>(config.getPoolsCacheSizeMirrorGroupId());
+        groupIdPoolConfig = new PoolManager.PoolConfig(
+                config.getMinGroupId(), config.getMaxGroupId(),
+                (config.getMaxGroupId() - config.getMinGroupId()) / POOL_SIZE);
 
         encapsulationResourcesProviders = ImmutableMap.<FlowEncapsulationType, EncapsulationResourcesProvider>builder()
                 .put(FlowEncapsulationType.TRANSIT_VLAN, new TransitVlanPool(persistenceManager,
@@ -227,7 +234,9 @@ public class FlowResourcesManager {
                                                MirrorGroupType type, MirrorDirection direction)
             throws ResourceAllocationException {
         try {
-            return mirrorGroupIdPool.allocate(switchId, flowId, pathId, type, direction);
+            MirrorGroup mirrorGroup = newMirrorGroup(switchId, flowId, pathId, type, direction);
+            mirrorGroupRepository.add(mirrorGroup);
+            return mirrorGroup;
         } catch (ResourceNotAvailableException ex) {
             throw new ResourceAllocationException("Unable to allocate cookie", ex);
         }
@@ -238,7 +247,21 @@ public class FlowResourcesManager {
      */
     public void deallocateMirrorGroup(PathId pathId, SwitchId switchId) {
         log.debug("Deallocate mirror group id on the switch: {} and path: {}", switchId, pathId);
-        mirrorGroupIdPool.deallocate(pathId, switchId);
+        transactionManager.doInTransaction(() -> deallocateMirrorGroupTransaction(pathId, switchId));
+    }
+
+    private void deallocateMirrorGroupTransaction(PathId pathId, SwitchId switchId) {
+        mirrorGroupRepository.findByPathIdAndSwitchId(pathId, switchId)
+                .ifPresent(entity -> deallocateMirrorGroupTransaction(switchId, entity));
+    }
+
+    private void deallocateMirrorGroupTransaction(SwitchId switchId, MirrorGroup entity) {
+        queryGroupIdPoolManager(switchId).deallocate(
+                () -> {
+                    mirrorGroupRepository.remove(entity);
+                    return entity.getGroupId().getValue();
+                }
+        );
     }
 
     /**
@@ -320,6 +343,18 @@ public class FlowResourcesManager {
                 });
     }
 
+    private MirrorGroup newMirrorGroup(
+            SwitchId switchId, String flowId, PathId pathId, MirrorGroupType type, MirrorDirection direction) {
+        return queryGroupIdPoolManager(switchId).allocate(entityId -> MirrorGroup.builder()
+                .groupId(new GroupId(entityId))
+                .switchId(switchId)
+                .flowId(flowId)
+                .pathId(pathId)
+                .mirrorGroupType(type)
+                .mirrorDirection(direction)
+                .build());
+    }
+
     private FlowCookie newFlowCookie(String flowId) {
         return cookiePool.allocate(entityId -> FlowCookie.builder()
                 .unmaskedCookie(entityId)
@@ -349,5 +384,15 @@ public class FlowResourcesManager {
         MeterIdPoolEntityAdapter adapter = new MeterIdPoolEntityAdapter(
                 flowMeterRepository, meterIdPoolConfig, switchId);
         return new PoolManager<>(meterIdPoolConfig, adapter);
+    }
+
+    private PoolManager<MirrorGroup> queryGroupIdPoolManager(SwitchId switchId) {
+        return groupIdPools.computeIfAbsent(switchId, this::newGroupIdPoolManager);
+    }
+
+    private PoolManager<MirrorGroup> newGroupIdPoolManager(SwitchId switchId) {
+        GroupIdPoolEntityAdapter adapter = new GroupIdPoolEntityAdapter(
+                mirrorGroupRepository, switchId, groupIdPoolConfig);
+        return new PoolManager<>(groupIdPoolConfig, adapter);
     }
 }
