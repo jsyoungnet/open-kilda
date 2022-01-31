@@ -34,7 +34,7 @@ import org.openkilda.persistence.inmemory.InMemoryGraphBasedTest;
 import org.openkilda.persistence.repositories.FlowCookieRepository;
 import org.openkilda.persistence.repositories.FlowMeterRepository;
 import org.openkilda.persistence.repositories.SwitchRepository;
-import org.openkilda.wfm.share.flow.resources.transitvlan.TransitVlanEncapsulation;
+import org.openkilda.wfm.share.flow.resources.transit.vlan.TransitVlanEncapsulation;
 import org.openkilda.wfm.share.mappers.FlowMapper;
 
 import org.junit.Before;

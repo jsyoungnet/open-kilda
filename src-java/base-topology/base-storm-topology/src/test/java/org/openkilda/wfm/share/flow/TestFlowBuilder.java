@@ -33,8 +33,8 @@ import org.openkilda.model.TransitVlan;
 import org.openkilda.model.Vxlan;
 import org.openkilda.model.cookie.FlowSegmentCookie;
 import org.openkilda.wfm.share.flow.resources.EncapsulationResources;
-import org.openkilda.wfm.share.flow.resources.transitvlan.TransitVlanEncapsulation;
-import org.openkilda.wfm.share.flow.resources.vxlan.VxlanEncapsulation;
+import org.openkilda.wfm.share.flow.resources.transit.vlan.TransitVlanEncapsulation;
+import org.openkilda.wfm.share.flow.resources.transit.vxlan.VxlanEncapsulation;
 import org.openkilda.wfm.topology.flow.model.FlowPathsWithEncapsulation;
 import org.openkilda.wfm.topology.flow.model.FlowPathsWithEncapsulation.FlowPathsWithEncapsulationBuilder;
 

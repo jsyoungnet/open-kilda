@@ -17,24 +17,52 @@ package org.openkilda.wfm.share.flow.resources;
 
 import org.openkilda.model.Flow;
 import org.openkilda.model.PathId;
+import org.openkilda.persistence.PersistenceManager;
+import org.openkilda.persistence.tx.TransactionManager;
+import org.openkilda.persistence.tx.TransactionRequired;
+import org.openkilda.wfm.share.utils.PoolManager;
 
 import java.util.Optional;
 
-public interface EncapsulationResourcesProvider<T extends EncapsulationResources> {
-    /**
-     * Allocates flow encapsulation resources for the flow path.
-     *
-     * @return allocated resources.
-     */
-    T allocate(Flow flow, PathId pathId, PathId oppositePathId) throws ResourceNotAvailableException;
+public abstract class EncapsulationResourcesProvider<A extends EncapsulationResources, E> {
+    protected final TransactionManager transactionManager;
+
+    public EncapsulationResourcesProvider(PersistenceManager persistenceManager) {
+        transactionManager = persistenceManager.getTransactionManager();
+    }
 
     /**
-     * Deallocates flow encapsulation resources of the path.
+     * Allocates flow encapsulation resources for the flow path.
      */
-    void deallocate(PathId pathId);
+    public A allocate(Flow flow, PathId pathId, PathId oppositePathId) throws ResourceNotAvailableException {
+        return get(oppositePathId, null)
+                .orElseGet(() -> allocate(flow, pathId));
+    }
+
+    @TransactionRequired
+    private A allocate(Flow flow, PathId pathId) {
+        E entity = getPoolManager().allocate(
+                entityId -> allocateEntity(flow.getFlowId(), pathId, entityId));
+        return newFlowResourceAdapter(entity);
+    }
 
     /**
      * Get allocated encapsulation resources of the flow path.
      */
-    Optional<T> get(PathId pathId, PathId oppositePathId);
+    public abstract Optional<A> get(PathId pathId, PathId oppositePathId);
+
+    /**
+     * Deallocates flow encapsulation resources of the path.
+     */
+    public void deallocate(PathId pathId) {
+        transactionManager.doInTransaction(() -> deallocateTransaction(pathId));
+    }
+
+    protected abstract E allocateEntity(String flowId, PathId pathId, long entityId);
+
+    protected abstract void deallocateTransaction(PathId pathId);
+
+    protected abstract A newFlowResourceAdapter(E entity);
+
+    protected abstract PoolManager<E> getPoolManager();
 }

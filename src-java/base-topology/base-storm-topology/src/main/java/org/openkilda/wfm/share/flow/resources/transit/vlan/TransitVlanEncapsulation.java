@@ -13,7 +13,7 @@
  *   limitations under the License.
  */
 
-package org.openkilda.wfm.share.flow.resources.transitvlan;
+package org.openkilda.wfm.share.flow.resources.transit.vlan;
 
 import org.openkilda.model.EncapsulationId;
 import org.openkilda.model.FlowEncapsulationType;

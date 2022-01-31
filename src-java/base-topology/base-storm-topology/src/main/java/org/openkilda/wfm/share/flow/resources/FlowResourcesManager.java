@@ -36,8 +36,8 @@ import org.openkilda.persistence.repositories.MirrorGroupRepository;
 import org.openkilda.persistence.repositories.RepositoryFactory;
 import org.openkilda.persistence.tx.TransactionManager;
 import org.openkilda.wfm.share.flow.resources.FlowResources.PathResources;
-import org.openkilda.wfm.share.flow.resources.transitvlan.TransitVlanPool;
-import org.openkilda.wfm.share.flow.resources.vxlan.VxlanPool;
+import org.openkilda.wfm.share.flow.resources.transit.vlan.TransitVlanProvider;
+import org.openkilda.wfm.share.flow.resources.transit.vxlan.TransiVxLanProvider;
 import org.openkilda.wfm.share.utils.PoolManager;
 import org.openkilda.wfm.share.utils.PoolManager.PoolConfig;
 
@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableMap;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.map.LRUMap;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,7 +70,8 @@ public class FlowResourcesManager {
     private final LRUMap<SwitchId, PoolManager<MirrorGroup>> groupIdPools;
     private final PoolManager.PoolConfig groupIdPoolConfig;
 
-    private final Map<FlowEncapsulationType, EncapsulationResourcesProvider> encapsulationResourcesProviders;
+    private final Map<FlowEncapsulationType, EncapsulationResourcesProvider<? extends EncapsulationResources, ?>>
+            encapsulationResourcesProviders;
 
     public FlowResourcesManager(PersistenceManager persistenceManager, FlowResourcesConfig config) {
         transactionManager = persistenceManager.getTransactionManager();
@@ -94,12 +96,7 @@ public class FlowResourcesManager {
                 config.getMinGroupId(), config.getMaxGroupId(),
                 (config.getMaxGroupId() - config.getMinGroupId()) / POOL_SIZE);
 
-        encapsulationResourcesProviders = ImmutableMap.<FlowEncapsulationType, EncapsulationResourcesProvider>builder()
-                .put(FlowEncapsulationType.TRANSIT_VLAN, new TransitVlanPool(persistenceManager,
-                        config.getMinFlowTransitVlan(), config.getMaxFlowTransitVlan(), POOL_SIZE))
-                .put(FlowEncapsulationType.VXLAN, new VxlanPool(persistenceManager,
-                        config.getMinFlowVxlan(), config.getMaxFlowVxlan(), POOL_SIZE))
-                .build();
+        encapsulationResourcesProviders = generateTransitEncapsulationProvidersMap(persistenceManager, config);
     }
 
     /**
@@ -394,5 +391,30 @@ public class FlowResourcesManager {
         GroupIdPoolEntityAdapter adapter = new GroupIdPoolEntityAdapter(
                 mirrorGroupRepository, switchId, groupIdPoolConfig);
         return new PoolManager<>(groupIdPoolConfig, adapter);
+    }
+
+    private static ImmutableMap<
+            FlowEncapsulationType,
+            EncapsulationResourcesProvider<? extends EncapsulationResources, ?>>
+            generateTransitEncapsulationProvidersMap(
+                    PersistenceManager persistenceManager, FlowResourcesConfig config) {
+
+        Map<FlowEncapsulationType, EncapsulationResourcesProvider<? extends EncapsulationResources, ?>> providers;
+        providers = new HashMap<>();
+
+        providers.put(FlowEncapsulationType.TRANSIT_VLAN, new TransitVlanProvider(
+                persistenceManager, newPoolConfig(config.getMinFlowTransitVlan(), config.getMaxFlowTransitVlan())));
+        providers.put(FlowEncapsulationType.VXLAN, new TransiVxLanProvider(persistenceManager,
+                newPoolConfig(config.getMinFlowVxlan(), config.getMaxFlowVxlan())));
+
+        return ImmutableMap.copyOf(providers);
+    }
+
+    private static PoolManager.PoolConfig newPoolConfig(long idMinimum, long idMaximum) {
+        long count = (idMaximum - idMinimum) / POOL_SIZE;
+        if (count < 1) {
+            count = idMaximum - idMinimum;
+        }
+        return new PoolManager.PoolConfig(idMinimum, idMaximum, count);
     }
 }
