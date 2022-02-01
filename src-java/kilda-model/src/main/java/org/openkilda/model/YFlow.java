@@ -64,6 +64,8 @@ public class YFlow implements CompositeDataEntity<YFlowData> {
      */
     private YFlow() {
         data = new YFlowDataImpl();
+        // The reference is used to link sub-flows back to the y-flow. See {@link #setSubFlows(Set)}.
+        ((YFlowDataImpl) data).yFlow = this;
     }
 
     /**
@@ -94,7 +96,7 @@ public class YFlow implements CompositeDataEntity<YFlowData> {
                 .sharedEndpointMeterId(sharedEndpointMeterId);
         data = builder.build();
 
-        // The reference is used to link sub-flows back to the y-flow. See {@link #setSegments(List)}.
+        // The reference is used to link sub-flows back to the y-flow. See {@link #setSubFlows(Set)}.
         ((YFlowDataImpl) data).yFlow = this;
     }
 
@@ -146,6 +148,27 @@ public class YFlow implements CompositeDataEntity<YFlowData> {
                 getPriority(), isPinned(), getPathComputationStrategy(), getYPoint(), getProtectedPathYPoint(),
                 getMeterId(), getProtectedPathMeterId(), getSharedEndpointMeterId(),
                 getTimeCreate(), getTimeModify(), getSubFlows());
+    }
+
+    /**
+     * Recalculate the y-flow status based on sub-flow statuses.
+     */
+    public void recalculateStatus() {
+        FlowStatus yFlowStatus = null;
+        for (YSubFlow subFlow : getSubFlows()) {
+            FlowStatus subFlowStatus = subFlow.getFlow().getStatus();
+            if (subFlowStatus == FlowStatus.IN_PROGRESS) {
+                yFlowStatus = FlowStatus.IN_PROGRESS;
+                break;
+            }
+            if (yFlowStatus == null) {
+                yFlowStatus = subFlowStatus;
+            } else if (yFlowStatus == FlowStatus.DOWN && subFlowStatus != FlowStatus.DOWN
+                    || yFlowStatus == FlowStatus.UP && subFlowStatus != FlowStatus.UP) {
+                yFlowStatus = FlowStatus.DEGRADED;
+            }
+        }
+        setStatus(yFlowStatus);
     }
 
     /**
@@ -355,6 +378,7 @@ public class YFlow implements CompositeDataEntity<YFlowData> {
          */
         default YFlowData deepCopy(YFlowData source, YFlow targetFlow) {
             YFlowDataImpl result = new YFlowDataImpl();
+            result.yFlow = targetFlow;
             copyWithoutSubFlows(source, result);
             result.setSubFlows(source.getSubFlows().stream()
                     .map(subFlow -> new YSubFlow(subFlow, targetFlow))
