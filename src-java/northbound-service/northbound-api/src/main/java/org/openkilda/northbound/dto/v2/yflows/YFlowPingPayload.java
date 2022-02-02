@@ -1,4 +1,4 @@
-/* Copyright 2021 Telstra Open Source
+/* Copyright 2022 Telstra Open Source
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
  *   you may not use this file except in compliance with the License.
@@ -13,21 +13,21 @@
  *   limitations under the License.
  */
 
-package org.openkilda.model;
+package org.openkilda.northbound.dto.v2.yflows;
 
-import com.google.common.collect.Lists;
-import org.junit.Assert;
-import org.junit.Test;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
-public class LagLogicalPortTest {
-    public static final int OFFSET = 2000;
-    public static final int POST_1 = 1;
-    public static final int POST_2 = 2;
-    public static final int POST_3 = 3;
+import javax.validation.constraints.PositiveOrZero;
 
-    @Test
-    public void generateLogicalPortNumberTest() {
-        Assert.assertEquals(POST_1 + OFFSET,
-                LagLogicalPort.generateLogicalPortNumber(Lists.newArrayList(POST_1, POST_2, POST_3), OFFSET));
-    }
+@Data
+@Builder
+@AllArgsConstructor
+public class YFlowPingPayload {
+
+    @PositiveOrZero(message = "timeoutMillis can't be negative")
+    @JsonProperty("timeout")
+    int timeoutMillis;
 }
