@@ -17,7 +17,10 @@ package org.openkilda.constants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,13 +46,15 @@ public abstract class IConstants {
     
     private static String prefix;
     
-    private static final Properties properties = new Properties();
-    
     static {
+        Properties p = new Properties();
         try {
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            properties.load(loader.getResourceAsStream(APPLICATION_PROPERTIES_FILE));
-            prefix = properties.getProperty("opentsdb.metric.prefix");
+            Resource resource = new ClassPathResource(FILE_PATH_PREFIX + APPLICATION_PROPERTIES_FILE);
+            if (!resource.exists()) {
+                resource = new ClassPathResource(APPLICATION_PROPERTIES_FILE);
+            }
+            p.load(new FileReader(resource.getFile()));
+            prefix = p.getProperty("opentsdb.metric.prefix");
         } catch (IOException e) {
             LOGGER.error("Error occurred while metric prefix getting propetry", e);
         }
