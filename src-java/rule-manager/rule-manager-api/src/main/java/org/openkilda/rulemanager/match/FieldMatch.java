@@ -26,12 +26,14 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Builder;
 import lombok.Value;
 
+import java.io.Serializable;
+
 @Value
 @JsonSerialize
 @Builder
 @JsonNaming(SnakeCaseStrategy.class)
 @JsonIgnoreProperties(value = { "masked" })
-public class FieldMatch {
+public class FieldMatch implements Serializable {
 
     long value;
     Long mask;
