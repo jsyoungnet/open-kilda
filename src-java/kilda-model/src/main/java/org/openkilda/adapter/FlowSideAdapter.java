@@ -25,7 +25,9 @@ import org.openkilda.model.SwitchId;
 import lombok.Getter;
 import lombok.NonNull;
 
-public abstract class FlowSideAdapter {
+import java.io.Serializable;
+
+public abstract class FlowSideAdapter implements Serializable {
     @Getter
     protected final Flow flow;
 
