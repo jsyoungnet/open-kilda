@@ -29,7 +29,7 @@ import java.io.Serializable;
 
 
 @Slf4j
-public class SerializebleTest {
+public class SerializableTest {
 
 
     @Test
