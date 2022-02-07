@@ -67,6 +67,8 @@ public class SerializableTest {
                                    Map<Class<?>, String> desc,
                                    Stack<Class<?>> stack,
                                    final Class<T> type) {
+
+
         stack.push(type);
         Set<Class<? extends T>> subTypes = reflections.getSubTypesOf(type);
         Field[] declaredFields = type.getDeclaredFields();
@@ -82,15 +84,20 @@ public class SerializableTest {
         desc.put(type, stack.toString());
         searchList.add(type);
 
-        for (Class<?> field : fields) {
-            if (!searchList.contains(field)) {
-                recursiveFind(reflections, searchList, desc, stack, field);
-            }
+        if (type.getName().contains("java.util.Set")) {
+            return;
         }
+        else {
+            for (Class<?> field : fields) {
+                if (!searchList.contains(field)) {
+                    recursiveFind(reflections, searchList, desc, stack, field);
+                }
+            }
 
-        for (Class<?> subType : subTypes) {
-            if (!searchList.contains(subType)) {
-                recursiveFind(reflections, searchList, desc, stack, subType);
+            for (Class<?> subType : subTypes) {
+                if (!searchList.contains(subType)) {
+                    recursiveFind(reflections, searchList, desc, stack, subType);
+                }
             }
         }
         stack.pop();

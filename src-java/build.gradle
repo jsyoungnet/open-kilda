@@ -155,6 +155,7 @@ subprojects {
             implementation 'com.esotericsoftware:kryo:5.0.4'
 
             testImplementation 'org.reflections:reflections:0.10.2'
+
         }
     }
 

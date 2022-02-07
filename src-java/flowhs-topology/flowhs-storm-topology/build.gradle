@@ -52,6 +52,9 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
     testAnnotationProcessor 'org.projectlombok:lombok-mapstruct-binding'
+
+    testImplementation 'com.github.javaparser:javaparser-symbol-solver-core:3.24.0'
+    testImplementation 'com.github.javaparser:javaparser-core:3.24.0'
 }
 
 jar {
