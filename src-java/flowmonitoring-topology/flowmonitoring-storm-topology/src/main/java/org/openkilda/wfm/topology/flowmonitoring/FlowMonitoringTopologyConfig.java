@@ -49,6 +49,10 @@ public interface FlowMonitoringTopologyConfig extends AbstractTopologyConfig {
     @Default("30")
     int getFlowSlaCheckIntervalSeconds();
 
+    @Key("flow.sla.check.shard.count")
+    @Default("10")
+    int getFlowSlaCheckShardCount();
+
     @Key("flow.rtt.stats.expiration.seconds")
     @Default("3")
     int getFlowRttStatsExpirationSeconds();
