@@ -23,6 +23,7 @@ import org.openkilda.messaging.payload.yflow.YFlowEndpointResources;
 import org.openkilda.model.FlowStatus;
 import org.openkilda.model.SwitchId;
 import org.openkilda.wfm.CommandContext;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.exception.InsufficientDataException;
 import org.openkilda.wfm.topology.flowhs.model.yflow.YFlowResources;
 import org.openkilda.wfm.topology.flowhs.service.FlowGenericCarrier;
@@ -34,7 +35,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.squirrelframework.foundation.fsm.StateMachine;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -62,7 +62,7 @@ public abstract class YFlowProcessingFsm<T extends StateMachine<T, S, E, C>, S, 
 
     protected YFlowProcessingFsm(E nextEvent, E errorEvent,
                                  @NonNull CommandContext commandContext, @NonNull R carrier, @NonNull String yFlowId,
-                                 @NonNull Collection<L> eventListeners) {
+                                 @NonNull PubSub<L> eventListeners) {
         super(nextEvent, errorEvent, commandContext, carrier, eventListeners);
         this.yFlowId = yFlowId;
     }

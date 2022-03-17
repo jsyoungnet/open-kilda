@@ -27,6 +27,7 @@ import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.YFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.AllocateYFlowResourcesAction;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.RevertYFlowStatusAction;
@@ -103,7 +104,7 @@ public final class YFlowRerouteFsm extends YFlowProcessingFsm<YFlowRerouteFsm, S
     private Collection<DeleteSpeakerCommandsRequest> deleteOldYFlowCommands;
 
     private YFlowRerouteFsm(@NonNull CommandContext commandContext, @NonNull YFlowRerouteHubCarrier carrier,
-                            @NonNull String yFlowId, @NonNull Collection<YFlowEventListener> eventListeners) {
+                            @NonNull String yFlowId, @NonNull PubSub<YFlowEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, yFlowId, eventListeners);
     }
 
@@ -152,7 +153,7 @@ public final class YFlowRerouteFsm extends YFlowProcessingFsm<YFlowRerouteFsm, S
 
             builder = StateMachineBuilderFactory.create(YFlowRerouteFsm.class, State.class, Event.class,
                     YFlowRerouteContext.class, CommandContext.class, YFlowRerouteHubCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             FlowOperationsDashboardLogger dashboardLogger = new FlowOperationsDashboardLogger(log);
 
@@ -339,7 +340,7 @@ public final class YFlowRerouteFsm extends YFlowProcessingFsm<YFlowRerouteFsm, S
         }
 
         public YFlowRerouteFsm newInstance(@NonNull CommandContext commandContext, @NonNull String flowId,
-                                           @NonNull Collection<YFlowEventListener> eventListeners) {
+                                           @NonNull PubSub<YFlowEventListener> eventListeners) {
             YFlowRerouteFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, flowId,
                     eventListeners);
 

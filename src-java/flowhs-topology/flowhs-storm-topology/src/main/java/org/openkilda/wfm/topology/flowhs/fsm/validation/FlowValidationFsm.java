@@ -46,6 +46,7 @@ import org.openkilda.wfm.error.IllegalFlowStateException;
 import org.openkilda.wfm.error.SwitchNotFoundException;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.NbTrackableFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.validation.FlowValidationFsm.Event;
 import org.openkilda.wfm.topology.flowhs.fsm.validation.FlowValidationFsm.State;
@@ -64,7 +65,6 @@ import org.squirrelframework.foundation.fsm.StateMachineBuilderFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -91,7 +91,7 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
                              @NonNull String flowId, @NonNull PersistenceManager persistenceManager,
                              @NonNull FlowResourcesManager flowResourcesManager,
                              @NonNull Config config,
-                             @NonNull Collection<FlowValidationEventListener> eventListeners) {
+                             @NonNull PubSub<FlowValidationEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, eventListeners);
         this.flowId = flowId;
 
@@ -225,7 +225,7 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
                     PersistenceManager.class,
                     FlowResourcesManager.class,
                     Config.class,
-                    Collection.class);
+                    PubSub.class);
 
             builder.transition().from(INITIALIZED).to(RECEIVE_DATA).on(NEXT)
                     .callMethod("receiveData");
@@ -247,14 +247,14 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
         }
 
         public FlowValidationFsm newInstance(@NonNull String flowId, @NonNull CommandContext commandContext,
-                                             @NonNull Collection<FlowValidationEventListener> eventListeners) {
+                                             @NonNull PubSub<FlowValidationEventListener> eventListeners) {
             FlowValidationFsm fsm = builder.newStateMachine(INITIALIZED, commandContext, carrier, flowId,
                     persistenceManager, flowResourcesManager, config, eventListeners);
 
             fsm.addTransitionCompleteListener(event ->
                     log.debug("FlowValidationFsm, transition to {} on {}", event.getTargetState(), event.getCause()));
 
-            if (!eventListeners.isEmpty()) {
+            if (eventListeners.haveListeners()) {
                 fsm.addTransitionCompleteListener(event -> {
                     switch (event.getTargetState()) {
                         case FINISHED_WITH_ERROR:

@@ -27,6 +27,7 @@ import org.openkilda.wfm.share.flow.resources.FlowResources;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.FlowProcessingWithHistorySupportFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.NotifyFlowMonitorAction;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.ReportErrorAction;
@@ -90,7 +91,7 @@ public final class FlowDeleteFsm extends FlowProcessingWithHistorySupportFsm<Flo
 
     public FlowDeleteFsm(@NonNull CommandContext commandContext, @NonNull FlowGenericCarrier carrier,
                          @NonNull String flowId,
-                         @NonNull Collection<FlowProcessingEventListener> eventListeners) {
+                         @NonNull PubSub<FlowProcessingEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, eventListeners);
         this.flowId = flowId;
     }
@@ -137,7 +138,7 @@ public final class FlowDeleteFsm extends FlowProcessingWithHistorySupportFsm<Flo
 
             builder = StateMachineBuilderFactory.create(FlowDeleteFsm.class, State.class, Event.class,
                     FlowDeleteContext.class, CommandContext.class, FlowGenericCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             final FlowOperationsDashboardLogger dashboardLogger = new FlowOperationsDashboardLogger(log);
             final ReportErrorAction<FlowDeleteFsm, State, Event, FlowDeleteContext>
@@ -220,14 +221,14 @@ public final class FlowDeleteFsm extends FlowProcessingWithHistorySupportFsm<Flo
         }
 
         public FlowDeleteFsm newInstance(@NonNull CommandContext commandContext, @NonNull String flowId,
-                                         @NonNull Collection<FlowProcessingEventListener> eventListeners) {
+                                         @NonNull PubSub<FlowProcessingEventListener> eventListeners) {
             FlowDeleteFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, flowId,
                     eventListeners);
 
             fsm.addTransitionCompleteListener(event ->
                     log.debug("FlowDeleteFsm, transition to {} on {}", event.getTargetState(), event.getCause()));
 
-            if (!eventListeners.isEmpty()) {
+            if (eventListeners.haveListeners()) {
                 fsm.addTransitionCompleteListener(event -> {
                     switch (event.getTargetState()) {
                         case FINISHED:

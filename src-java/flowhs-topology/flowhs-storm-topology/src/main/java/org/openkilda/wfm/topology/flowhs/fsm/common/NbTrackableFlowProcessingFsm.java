@@ -20,6 +20,7 @@ import org.openkilda.messaging.error.ErrorData;
 import org.openkilda.messaging.error.ErrorMessage;
 import org.openkilda.messaging.error.ErrorType;
 import org.openkilda.wfm.CommandContext;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.service.common.NorthboundResponseCarrier;
 import org.openkilda.wfm.topology.flowhs.service.common.ProcessingEventListener;
 
@@ -27,8 +28,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import org.squirrelframework.foundation.fsm.StateMachine;
-
-import java.util.Collection;
 
 public abstract class NbTrackableFlowProcessingFsm<T extends StateMachine<T, S, E, C>, S, E, C,
         R extends NorthboundResponseCarrier, L extends ProcessingEventListener>
@@ -43,7 +42,7 @@ public abstract class NbTrackableFlowProcessingFsm<T extends StateMachine<T, S, 
 
     protected NbTrackableFlowProcessingFsm(@NonNull E nextEvent, @NonNull E errorEvent,
                                            @NonNull CommandContext commandContext, @NonNull R carrier,
-                                           @NonNull Collection<L> eventListeners) {
+                                           @NonNull PubSub<L> eventListeners) {
         super(nextEvent, errorEvent, eventListeners);
         this.commandContext = commandContext;
         this.carrier = carrier;

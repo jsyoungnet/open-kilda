@@ -23,6 +23,7 @@ import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.YFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.RevertYFlowStatusAction;
 import org.openkilda.wfm.topology.flowhs.fsm.yflow.delete.YFlowDeleteFsm.Event;
@@ -74,7 +75,7 @@ public final class YFlowDeleteFsm extends YFlowProcessingFsm<YFlowDeleteFsm, Sta
     private Collection<DeleteSpeakerCommandsRequest> deleteOldYFlowCommands;
 
     private YFlowDeleteFsm(@NonNull CommandContext commandContext, @NonNull FlowGenericCarrier carrier,
-                           @NonNull String yFlowId, @NonNull Collection<YFlowEventListener> eventListeners) {
+                           @NonNull String yFlowId, @NonNull PubSub<YFlowEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, yFlowId, eventListeners);
     }
 
@@ -122,7 +123,7 @@ public final class YFlowDeleteFsm extends YFlowProcessingFsm<YFlowDeleteFsm, Sta
 
             builder = StateMachineBuilderFactory.create(YFlowDeleteFsm.class, State.class, Event.class,
                     YFlowDeleteContext.class, CommandContext.class, FlowGenericCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             FlowOperationsDashboardLogger dashboardLogger = new FlowOperationsDashboardLogger(log);
 
@@ -218,7 +219,7 @@ public final class YFlowDeleteFsm extends YFlowProcessingFsm<YFlowDeleteFsm, Sta
         }
 
         public YFlowDeleteFsm newInstance(@NonNull CommandContext commandContext, @NonNull String yFlowId,
-                                          @NonNull Collection<YFlowEventListener> eventListeners) {
+                                          @NonNull PubSub<YFlowEventListener> eventListeners) {
             YFlowDeleteFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, yFlowId,
                     eventListeners);
 

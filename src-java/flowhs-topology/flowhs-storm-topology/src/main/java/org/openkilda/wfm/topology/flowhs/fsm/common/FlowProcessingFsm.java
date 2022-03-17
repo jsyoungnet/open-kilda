@@ -16,13 +16,13 @@
 package org.openkilda.wfm.topology.flowhs.fsm.common;
 
 import org.openkilda.wfm.share.utils.AbstractBaseFsm;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.service.common.ProcessingEventListener;
 
 import lombok.Getter;
 import lombok.NonNull;
 import org.squirrelframework.foundation.fsm.StateMachine;
 
-import java.util.Collection;
 import java.util.function.Consumer;
 
 public abstract class FlowProcessingFsm<T extends StateMachine<T, S, E, C>, S, E, C, L extends ProcessingEventListener>
@@ -30,18 +30,18 @@ public abstract class FlowProcessingFsm<T extends StateMachine<T, S, E, C>, S, E
     private final E nextEvent;
     private final E errorEvent;
     @Getter
-    private final Collection<L> eventListeners;
+    protected final PubSub<L> eventListeners;
     @Getter
     private String errorReason;
 
-    protected FlowProcessingFsm(@NonNull E nextEvent, @NonNull E errorEvent, @NonNull Collection<L> eventListeners) {
+    protected FlowProcessingFsm(@NonNull E nextEvent, @NonNull E errorEvent, @NonNull PubSub<L> eventListeners) {
         this.nextEvent = nextEvent;
         this.errorEvent = errorEvent;
         this.eventListeners = eventListeners;
     }
 
     public void notifyEventListeners(@NonNull Consumer<L> eventProducer) {
-        eventListeners.forEach(eventProducer);
+        eventListeners.publish(eventProducer);
     }
 
     public abstract String getFlowId();

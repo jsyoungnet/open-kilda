@@ -23,6 +23,7 @@ import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.YFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.AllocateYFlowResourcesAction;
 import org.openkilda.wfm.topology.flowhs.fsm.yflow.create.YFlowCreateFsm.Event;
@@ -88,7 +89,7 @@ public final class YFlowCreateFsm extends YFlowProcessingFsm<YFlowCreateFsm, Sta
     private String diverseFlowId;
 
     private YFlowCreateFsm(@NonNull CommandContext commandContext, @NonNull FlowGenericCarrier carrier,
-                           @NonNull String yFlowId, @NonNull Collection<YFlowEventListener> eventListeners) {
+                           @NonNull String yFlowId, @NonNull PubSub<YFlowEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, yFlowId, eventListeners);
     }
 
@@ -158,7 +159,7 @@ public final class YFlowCreateFsm extends YFlowProcessingFsm<YFlowCreateFsm, Sta
 
             builder = StateMachineBuilderFactory.create(YFlowCreateFsm.class, State.class, Event.class,
                     YFlowCreateContext.class, CommandContext.class, FlowGenericCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             FlowOperationsDashboardLogger dashboardLogger = new FlowOperationsDashboardLogger(log);
 
@@ -363,7 +364,7 @@ public final class YFlowCreateFsm extends YFlowProcessingFsm<YFlowCreateFsm, Sta
         }
 
         public YFlowCreateFsm newInstance(@NonNull CommandContext commandContext, @NonNull String yFlowId,
-                                          @NonNull Collection<YFlowEventListener> eventListeners) {
+                                          @NonNull PubSub<YFlowEventListener> eventListeners) {
             YFlowCreateFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, yFlowId,
                     eventListeners);
 

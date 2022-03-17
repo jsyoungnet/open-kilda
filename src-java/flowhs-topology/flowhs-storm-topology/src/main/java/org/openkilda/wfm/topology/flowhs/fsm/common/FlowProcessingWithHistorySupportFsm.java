@@ -15,14 +15,13 @@
 
 package org.openkilda.wfm.topology.flowhs.fsm.common;
 
-import static java.util.Collections.emptyList;
-
 import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.history.model.FlowDumpData;
 import org.openkilda.wfm.share.history.model.FlowEventData;
 import org.openkilda.wfm.share.history.model.FlowHistoryData;
 import org.openkilda.wfm.share.history.model.FlowHistoryHolder;
 import org.openkilda.wfm.share.utils.KeyProvider;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.service.common.HistoryUpdateCarrier;
 import org.openkilda.wfm.topology.flowhs.service.common.NorthboundResponseCarrier;
 import org.openkilda.wfm.topology.flowhs.service.common.ProcessingEventListener;
@@ -31,7 +30,6 @@ import lombok.NonNull;
 import org.squirrelframework.foundation.fsm.StateMachine;
 
 import java.time.Instant;
-import java.util.Collection;
 
 public abstract class FlowProcessingWithHistorySupportFsm<T extends StateMachine<T, S, E, C>, S, E, C,
         R extends NorthboundResponseCarrier & HistoryUpdateCarrier, L extends ProcessingEventListener>
@@ -40,12 +38,12 @@ public abstract class FlowProcessingWithHistorySupportFsm<T extends StateMachine
 
     protected FlowProcessingWithHistorySupportFsm(@NonNull E nextEvent, @NonNull E errorEvent,
                                                   @NonNull CommandContext commandContext, @NonNull R carrier) {
-        this(nextEvent, errorEvent, commandContext, carrier, emptyList());
+        this(nextEvent, errorEvent, commandContext, carrier, new PubSub<>());
     }
 
     protected FlowProcessingWithHistorySupportFsm(@NonNull E nextEvent, @NonNull E errorEvent,
                                                   @NonNull CommandContext commandContext, @NonNull R carrier,
-                                                  @NonNull Collection<L> eventListeners) {
+                                                  @NonNull PubSub<L> eventListeners) {
         super(nextEvent, errorEvent, commandContext, carrier, eventListeners);
     }
 

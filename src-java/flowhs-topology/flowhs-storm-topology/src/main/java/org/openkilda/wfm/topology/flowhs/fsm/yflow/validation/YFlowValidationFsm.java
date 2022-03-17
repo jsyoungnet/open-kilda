@@ -21,6 +21,7 @@ import org.openkilda.messaging.info.rule.SwitchFlowEntries;
 import org.openkilda.persistence.PersistenceManager;
 import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.NbTrackableFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.yflow.validation.YFlowValidationFsm.Event;
 import org.openkilda.wfm.topology.flowhs.fsm.yflow.validation.YFlowValidationFsm.State;
@@ -70,7 +71,7 @@ public final class YFlowValidationFsm extends NbTrackableFlowProcessingFsm<YFlow
     private final List<SwitchMeterEntries> receivedMeters = new ArrayList<>();
 
     private YFlowValidationFsm(@NonNull CommandContext commandContext, @NonNull YFlowValidationHubCarrier carrier,
-                               @NonNull String yFlowId, @NonNull Collection<YFlowEventListener> eventListeners) {
+                               @NonNull String yFlowId, @NonNull PubSub<YFlowEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, eventListeners);
         this.yFlowId = yFlowId;
     }
@@ -121,10 +122,9 @@ public final class YFlowValidationFsm extends NbTrackableFlowProcessingFsm<YFlow
                        @NonNull YFlowValidationService yFlowValidationService) {
             this.carrier = carrier;
 
-
             builder = StateMachineBuilderFactory.create(YFlowValidationFsm.class, State.class, Event.class,
                     YFlowValidationContext.class, CommandContext.class, YFlowValidationHubCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             builder.transition()
                     .from(State.INITIALIZED)
@@ -207,7 +207,7 @@ public final class YFlowValidationFsm extends NbTrackableFlowProcessingFsm<YFlow
         }
 
         public YFlowValidationFsm newInstance(@NonNull CommandContext commandContext, @NonNull String yFlowId,
-                                              @NonNull Collection<YFlowEventListener> eventListeners) {
+                                              @NonNull PubSub<YFlowEventListener> eventListeners) {
             YFlowValidationFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, yFlowId,
                     eventListeners);
 

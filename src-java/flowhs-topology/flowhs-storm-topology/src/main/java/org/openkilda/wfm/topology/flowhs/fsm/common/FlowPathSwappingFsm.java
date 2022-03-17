@@ -15,8 +15,6 @@
 
 package org.openkilda.wfm.topology.flowhs.fsm.common;
 
-import static java.util.Collections.emptyList;
-
 import org.openkilda.floodlight.api.request.factory.FlowSegmentRequestFactory;
 import org.openkilda.floodlight.api.response.SpeakerResponse;
 import org.openkilda.messaging.error.ErrorType;
@@ -25,6 +23,7 @@ import org.openkilda.model.PathId;
 import org.openkilda.model.SwitchId;
 import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.flow.resources.FlowResources;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.service.FlowProcessingEventListener;
 import org.openkilda.wfm.topology.flowhs.service.common.HistoryUpdateCarrier;
 import org.openkilda.wfm.topology.flowhs.service.common.NorthboundResponseCarrier;
@@ -86,12 +85,12 @@ public abstract class FlowPathSwappingFsm<T extends StateMachine<T, S, E, C>, S,
 
     protected FlowPathSwappingFsm(@NonNull E nextEvent, @NonNull E errorEvent,
                                   @NonNull CommandContext commandContext, @NonNull R carrier, @NonNull String flowId) {
-        this(nextEvent, errorEvent, commandContext, carrier, flowId, emptyList());
+        this(nextEvent, errorEvent, commandContext, carrier, flowId, new PubSub<>());
     }
 
     protected FlowPathSwappingFsm(@NonNull E nextEvent, @NonNull E errorEvent,
                                   @NonNull CommandContext commandContext, @NonNull R carrier, @NonNull String flowId,
-                                  @NonNull Collection<L> eventListeners) {
+                                  @NonNull PubSub<L> eventListeners) {
         super(nextEvent, errorEvent, commandContext, carrier, eventListeners);
         this.flowId = flowId;
     }

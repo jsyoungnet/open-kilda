@@ -27,6 +27,7 @@ import org.openkilda.wfm.CommandContext;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.FlowPathSwappingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.NotifyFlowMonitorAction;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.NotifyFlowStatsOnNewPathsAction;
@@ -83,7 +84,6 @@ import org.squirrelframework.foundation.fsm.StateMachineBuilder;
 import org.squirrelframework.foundation.fsm.StateMachineBuilderFactory;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +112,7 @@ public final class FlowUpdateFsm extends FlowPathSwappingFsm<FlowUpdateFsm, Stat
 
     public FlowUpdateFsm(@NonNull CommandContext commandContext, @NonNull FlowUpdateHubCarrier carrier,
                          @NonNull String flowId,
-                         @NonNull Collection<FlowUpdateEventListener> eventListeners) {
+                         @NonNull PubSub<FlowUpdateEventListener> eventListeners) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, flowId, eventListeners);
     }
 
@@ -141,7 +141,7 @@ public final class FlowUpdateFsm extends FlowPathSwappingFsm<FlowUpdateFsm, Stat
 
             builder = StateMachineBuilderFactory.create(FlowUpdateFsm.class, State.class, Event.class,
                     FlowUpdateContext.class, CommandContext.class, FlowUpdateHubCarrier.class, String.class,
-                    Collection.class);
+                    PubSub.class);
 
             FlowOperationsDashboardLogger dashboardLogger = new FlowOperationsDashboardLogger(log);
             final ReportErrorAction<FlowUpdateFsm, State, Event, FlowUpdateContext>
@@ -409,25 +409,25 @@ public final class FlowUpdateFsm extends FlowPathSwappingFsm<FlowUpdateFsm, Stat
         }
 
         public FlowUpdateFsm newInstance(@NonNull String flowId, @NonNull CommandContext commandContext,
-                                         @NonNull Collection<FlowUpdateEventListener> eventListeners) {
+                                         @NonNull PubSub<FlowUpdateEventListener> eventListeners) {
             FlowUpdateFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, flowId,
                     eventListeners);
 
             fsm.addTransitionCompleteListener(event ->
                     log.debug("FlowUpdateFsm, transition to {} on {}", event.getTargetState(), event.getCause()));
 
-            if (fsm.getEventListeners() != null && !fsm.getEventListeners().isEmpty()) {
+            if (fsm.getEventListeners() != null && fsm.getEventListeners().haveListeners()) {
                 fsm.addTransitionCompleteListener(event -> {
                     switch (event.getTargetState()) {
                         case FINISHED:
-                            fsm.getEventListeners().forEach(listener -> listener.onCompleted(fsm.getFlowId()));
+                            fsm.getEventListeners().publish(listener -> listener.onCompleted(fsm.getFlowId()));
                             break;
                         case FINISHED_WITH_ERROR:
                             ErrorType errorType = Optional.ofNullable(fsm.getOperationResultMessage())
                                     .filter(message -> message instanceof ErrorMessage)
                                     .map(message -> ((ErrorMessage) message).getData())
                                     .map(ErrorData::getErrorType).orElse(ErrorType.INTERNAL_ERROR);
-                            fsm.getEventListeners().forEach(listener -> listener.onFailed(fsm.getFlowId(),
+                            fsm.getEventListeners().publish(listener -> listener.onFailed(fsm.getFlowId(),
                                     fsm.getErrorReason(), errorType));
                             break;
                         default:

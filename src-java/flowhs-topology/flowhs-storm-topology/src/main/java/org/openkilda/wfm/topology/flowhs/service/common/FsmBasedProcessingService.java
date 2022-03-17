@@ -16,6 +16,7 @@
 package org.openkilda.wfm.topology.flowhs.service.common;
 
 import org.openkilda.wfm.share.utils.FsmExecutor;
+import org.openkilda.wfm.share.utils.PubSub;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,15 +24,12 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.squirrelframework.foundation.fsm.impl.AbstractStateMachine;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Slf4j
 public abstract class FsmBasedProcessingService<T extends AbstractStateMachine<T, ?, E, C>, E, C,
         F extends FsmRegister<T>, L extends ProcessingEventListener> {
     protected final F fsmRegister;
     protected final FsmExecutor<T, ?, E, C> fsmExecutor;
-    protected final Set<L> eventListeners = new HashSet<>();
+    protected final PubSub<L> eventListeners = new PubSub<>();
 
     @Getter(AccessLevel.PROTECTED)
     private boolean active;
@@ -43,7 +41,7 @@ public abstract class FsmBasedProcessingService<T extends AbstractStateMachine<T
     }
 
     public void addEventListener(@NonNull L eventListener) {
-        eventListeners.add(eventListener);
+        eventListeners.subscribe(eventListener);
     }
 
     /**

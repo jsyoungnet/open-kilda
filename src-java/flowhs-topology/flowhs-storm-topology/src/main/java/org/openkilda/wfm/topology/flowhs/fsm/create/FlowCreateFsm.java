@@ -28,6 +28,7 @@ import org.openkilda.wfm.share.flow.resources.FlowResources;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.logger.FlowOperationsDashboardLogger;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.utils.PubSub;
 import org.openkilda.wfm.topology.flowhs.fsm.common.FlowProcessingWithHistorySupportFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.SpeakerCommandFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.common.actions.NotifyFlowMonitorAction;
@@ -70,7 +71,6 @@ import org.squirrelframework.foundation.fsm.StateMachineBuilderFactory;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -112,7 +112,7 @@ public final class FlowCreateFsm extends FlowProcessingWithHistorySupportFsm<Flo
 
     private FlowCreateFsm(@NonNull CommandContext commandContext, @NonNull FlowGenericCarrier carrier,
                           @NonNull String flowId,
-                          @NonNull Collection<FlowCreateEventListener> eventListeners, @NonNull Config config) {
+                          @NonNull PubSub<FlowCreateEventListener> eventListeners, @NonNull Config config) {
         super(Event.NEXT, Event.ERROR, commandContext, carrier, eventListeners);
         this.flowId = flowId;
         this.remainRetries = config.getFlowCreationRetriesLimit();
@@ -192,7 +192,7 @@ public final class FlowCreateFsm extends FlowProcessingWithHistorySupportFsm<Flo
 
             this.builder = StateMachineBuilderFactory.create(FlowCreateFsm.class, State.class, Event.class,
                     FlowCreateContext.class, CommandContext.class, FlowGenericCarrier.class, String.class,
-                    Collection.class, Config.class);
+                    PubSub.class, Config.class);
 
             SpeakerCommandFsm.Builder commandExecutorFsmBuilder =
                     SpeakerCommandFsm.getBuilder(carrier, config.getSpeakerCommandRetriesLimit());
@@ -410,14 +410,14 @@ public final class FlowCreateFsm extends FlowProcessingWithHistorySupportFsm<Flo
         }
 
         public FlowCreateFsm newInstance(@NonNull CommandContext commandContext, @NonNull String flowId,
-                                         @NonNull Collection<FlowCreateEventListener> eventListeners) {
+                                         @NonNull PubSub<FlowCreateEventListener> eventListeners) {
             FlowCreateFsm fsm = builder.newStateMachine(State.INITIALIZED, commandContext, carrier, flowId,
                     eventListeners, config);
 
             fsm.addTransitionCompleteListener(event ->
                     log.debug("FlowCreateFsm, transition to {} on {}", event.getTargetState(), event.getCause()));
 
-            if (!eventListeners.isEmpty()) {
+            if (eventListeners.haveListeners()) { // TODO(surabujin): why for this condition?
                 fsm.addTransitionCompleteListener(event -> {
                     switch (event.getTargetState()) {
                         case FINISHED:
