@@ -63,13 +63,17 @@ public class HistoryService {
      * @param historyHolder holder of history information.
      */
     public void store(FlowHistoryHolder historyHolder) {
+        String taskId = historyHolder.getTaskId();
+        log.debug("Starting processing of history record for task {}", taskId);
+        long t0 = System.currentTimeMillis();
         transactionManager.doInTransaction(() -> {
-            String taskId = historyHolder.getTaskId();
             if (historyHolder.getFlowEventData() != null) {
                 FlowEvent event = HistoryMapper.INSTANCE.map(historyHolder.getFlowEventData());
                 event.setTaskId(taskId);
                 flowEventRepository.add(event);
             }
+            log.debug("processing of event record for task {} took {}", taskId, System.currentTimeMillis() - t0);
+            long t1 = System.currentTimeMillis();
 
             if (historyHolder.getFlowHistoryData() != null) {
                 FlowEventAction history = HistoryMapper.INSTANCE.map(historyHolder.getFlowHistoryData());
@@ -77,11 +81,16 @@ public class HistoryService {
                 flowEventActionRepository.add(history);
             }
 
+            log.debug("processing of event action record for task {} took {}", taskId, System.currentTimeMillis() - t1);
+            long t2 = System.currentTimeMillis();
+
             if (historyHolder.getFlowDumpData() != null) {
                 FlowEventDump dump = HistoryMapper.INSTANCE.map(historyHolder.getFlowDumpData());
                 dump.setTaskId(taskId);
                 flowEventDumpRepository.add(dump);
             }
+            log.debug("processing of event dump record for task {} took {}", taskId, System.currentTimeMillis() - t2);
+            log.debug("total processing of task {} took {}", taskId, System.currentTimeMillis() - t0);
         });
     }
 
