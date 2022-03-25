@@ -62,41 +62,42 @@ class CleanupVerifierListener extends AbstractSpringListener {
         assert northboundV2.getAllFlows().empty
         withPool {
             topology.activeSwitches.eachParallel { Switch sw ->
-                def validation = northbound.validateSwitch(sw.dpId)
-                validation.verifyRuleSectionsAreEmpty()
-                validation.verifyMeterSectionsAreEmpty()
-                def swProps = northbound.getSwitchProperties(sw.dpId)
-                assert swProps.multiTable == useMultitable
-                def s42Config = sw.prop
-                if (s42Config) {
-                    assert swProps.server42FlowRtt == s42Config.server42FlowRtt
-                    assert swProps.server42Port == s42Config.server42Port
-                    assert swProps.server42MacAddress == s42Config.server42MacAddress
-                    assert swProps.server42Vlan == s42Config.server42Vlan
-                    assert swProps.server42IslRtt == (s42Config.server42IslRtt == null ? "AUTO" : (s42Config.server42IslRtt ? "ENABLED" : "DISABLED"))
-                }
+                assert !northboundV2.getSwitchConnections(sw.dpId).connections.empty
+//                def validation = northbound.validateSwitch(sw.dpId)
+//                validation.verifyRuleSectionsAreEmpty()
+//                validation.verifyMeterSectionsAreEmpty()
+//                def swProps = northbound.getSwitchProperties(sw.dpId)
+//                assert swProps.multiTable == useMultitable
+//                def s42Config = sw.prop
+//                if (s42Config) {
+//                    assert swProps.server42FlowRtt == s42Config.server42FlowRtt
+//                    assert swProps.server42Port == s42Config.server42Port
+//                    assert swProps.server42MacAddress == s42Config.server42MacAddress
+//                    assert swProps.server42Vlan == s42Config.server42Vlan
+//                    assert swProps.server42IslRtt == (s42Config.server42IslRtt == null ? "AUTO" : (s42Config.server42IslRtt ? "ENABLED" : "DISABLED"))
+//                }
             }
         }
-        def regionVerifications = new SoftAssertions()
-        flHelper.fls.forEach { fl ->
-            def expectedSwitchIds = topology.activeSwitches.findAll { fl.region in it.regions }*.dpId
-            if (!expectedSwitchIds.empty) {
-                regionVerifications.checkSucceeds {
-                    assert fl.floodlightService.switches*.switchId.sort() == expectedSwitchIds.sort()
-                }
-            }
-        }
-        regionVerifications.verify()
-        withPool {
-            database.getIsls(topology.isls).eachParallel {
-                assert it.timeUnstable == null
-                assert it.status == IslStatus.ACTIVE
-                assert it.actualStatus == IslStatus.ACTIVE
-                assert it.availableBandwidth == it.maxBandwidth
-                assert it.availableBandwidth == it.speed
-                assert it.cost == Constants.DEFAULT_COST || it.cost == 0
-            }
-        }
+//        def regionVerifications = new SoftAssertions()
+//        flHelper.fls.forEach { fl ->
+//            def expectedSwitchIds = topology.activeSwitches.findAll { fl.region in it.regions }*.dpId
+//            if (!expectedSwitchIds.empty) {
+//                regionVerifications.checkSucceeds {
+//                    assert fl.floodlightService.switches*.switchId.sort() == expectedSwitchIds.sort()
+//                }
+//            }
+//        }
+//        regionVerifications.verify()
+//        withPool {
+//            database.getIsls(topology.isls).eachParallel {
+//                assert it.timeUnstable == null
+//                assert it.status == IslStatus.ACTIVE
+//                assert it.actualStatus == IslStatus.ACTIVE
+//                assert it.availableBandwidth == it.maxBandwidth
+//                assert it.availableBandwidth == it.speed
+//                assert it.cost == Constants.DEFAULT_COST || it.cost == 0
+//            }
+//        }
         assert northbound.getLinkProps(topology.isls).empty
     }
 }
