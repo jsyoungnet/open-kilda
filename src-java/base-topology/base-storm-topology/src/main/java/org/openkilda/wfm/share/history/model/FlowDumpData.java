@@ -16,6 +16,7 @@
 package org.openkilda.wfm.share.history.model;
 
 import org.openkilda.model.FlowEncapsulationType;
+import org.openkilda.model.FlowMirrorPath;
 import org.openkilda.model.FlowPathStatus;
 import org.openkilda.model.MeterId;
 import org.openkilda.model.PathComputationStrategy;
@@ -28,6 +29,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @Builder
@@ -63,6 +65,7 @@ public class FlowDumpData implements Serializable {
     private long maxLatencyTier2;
     private Integer priority;
     private SwitchId loopSwitchId;
+    private List<FlowMirrorPath> flowMirrorPaths;
 
     @AllArgsConstructor
     @Getter

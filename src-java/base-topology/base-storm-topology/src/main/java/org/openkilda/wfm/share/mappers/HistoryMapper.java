@@ -22,6 +22,8 @@ import org.openkilda.messaging.payload.history.FlowHistoryPayload;
 import org.openkilda.messaging.payload.history.FlowStatusTimestampsEntry;
 import org.openkilda.messaging.payload.history.PortHistoryPayload;
 import org.openkilda.model.Flow;
+import org.openkilda.model.FlowMirrorPath;
+import org.openkilda.model.FlowMirrorPoints;
 import org.openkilda.model.FlowPath;
 import org.openkilda.model.FlowPathDirection;
 import org.openkilda.model.MeterId;
@@ -48,7 +50,9 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Mapper(uses = {FlowPathMapper.class})
@@ -69,6 +73,9 @@ public abstract class HistoryMapper {
         FlowDumpPayload result = generatedMap(dump);
         result.setForwardCookie(fallbackIfNull(mapCookie(dump.getForwardCookie()), 0L));
         result.setReverseCookie(fallbackIfNull(mapCookie(dump.getReverseCookie()), 0L));
+
+        result.setMirrorPointStatuses(FlowMapper.INSTANCE.map(dump.getFlowMirrorPaths()));
+
         return result;
     }
 
@@ -81,39 +88,6 @@ public abstract class HistoryMapper {
      * Note: you have to additionally set {@link org.openkilda.wfm.share.history.model.FlowDumpData.DumpType}
      * to the dump data.
      */
-    @Mapping(source = "flow.srcSwitch.switchId", target = "sourceSwitch")
-    @Mapping(source = "flow.destSwitch.switchId", target = "destinationSwitch")
-    @Mapping(source = "flow.srcPort", target = "sourcePort")
-    @Mapping(source = "flow.destPort", target = "destinationPort")
-    @Mapping(source = "flow.srcVlan", target = "sourceVlan")
-    @Mapping(source = "flow.destVlan", target = "destinationVlan")
-    @Mapping(source = "flow.srcInnerVlan", target = "sourceInnerVlan")
-    @Mapping(source = "flow.destInnerVlan", target = "destinationInnerVlan")
-    @Mapping(source = "flow.flowId", target = "flowId")
-    @Mapping(source = "flow.bandwidth", target = "bandwidth")
-    @Mapping(source = "flow.ignoreBandwidth", target = "ignoreBandwidth")
-    @Mapping(source = "flow.allocateProtectedPath", target = "allocateProtectedPath")
-    @Mapping(source = "flow.pinned", target = "pinned")
-    @Mapping(source = "flow.periodicPings", target = "periodicPings")
-    @Mapping(source = "flow.encapsulationType", target = "encapsulationType")
-    @Mapping(source = "flow.pathComputationStrategy", target = "pathComputationStrategy")
-    @Mapping(source = "flow.maxLatency", target = "maxLatency")
-    @Mapping(source = "flow.loopSwitchId", target = "loopSwitchId")
-    @Mapping(source = "forward.cookie", target = "forwardCookie")
-    @Mapping(source = "reverse.cookie", target = "reverseCookie")
-    @Mapping(source = "forward.meterId", target = "forwardMeterId")
-    @Mapping(source = "reverse.meterId", target = "reverseMeterId")
-    @Mapping(source = "forward.status", target = "forwardStatus")
-    @Mapping(source = "reverse.status", target = "reverseStatus")
-    @Mapping(source = "forward", target = "forwardPath")
-    @Mapping(source = "reverse", target = "reversePath")
-    @Mapping(source = "dumpType", target = "dumpType")
-    public abstract FlowDumpData map(Flow flow, FlowPath forward, FlowPath reverse, DumpType dumpType);
-
-    /**
-     * Note: you have to additionally set {@link org.openkilda.wfm.share.history.model.FlowDumpData.DumpType}
-     * to the dump data.
-     */
     public FlowDumpData map(Flow flow, FlowResources resources, DumpType dumpType) {
         FlowDumpData result = generatedMap(flow, resources, dumpType);
 
@@ -121,7 +95,19 @@ public abstract class HistoryMapper {
                 .flowEffectiveId(resources.getUnmaskedCookie());
         result.setForwardCookie(cookieBuilder.direction(FlowPathDirection.FORWARD).build());
         result.setReverseCookie(cookieBuilder.direction(FlowPathDirection.REVERSE).build());
+        result.setFlowMirrorPaths(getFlowMirrorPaths(flow));
 
+        return result;
+    }
+
+    /**
+     * Note: you have to additionally set {@link org.openkilda.wfm.share.history.model.FlowDumpData.DumpType}
+     * to the dump data.
+     */
+    public FlowDumpData map(Flow flow, FlowPath forward, FlowPath reverse, DumpType dumpType) {
+        FlowDumpData result = generatedMap(flow, forward, reverse, dumpType);
+
+        result.setFlowMirrorPaths(getFlowMirrorPaths(flow));
         return result;
     }
 
@@ -155,6 +141,40 @@ public abstract class HistoryMapper {
     @Mapping(target = "timestamp", ignore = true)
     public abstract FlowStatusTimestampsEntry map(FlowStatusView flowStatusesImmutableView);
 
+    /**
+     * Note: you have to additionally set {@link org.openkilda.wfm.share.history.model.FlowDumpData.DumpType}
+     * to the dump data.
+     */
+    @Mapping(source = "flow.srcSwitch.switchId", target = "sourceSwitch")
+    @Mapping(source = "flow.destSwitch.switchId", target = "destinationSwitch")
+    @Mapping(source = "flow.srcPort", target = "sourcePort")
+    @Mapping(source = "flow.destPort", target = "destinationPort")
+    @Mapping(source = "flow.srcVlan", target = "sourceVlan")
+    @Mapping(source = "flow.destVlan", target = "destinationVlan")
+    @Mapping(source = "flow.srcInnerVlan", target = "sourceInnerVlan")
+    @Mapping(source = "flow.destInnerVlan", target = "destinationInnerVlan")
+    @Mapping(source = "flow.flowId", target = "flowId")
+    @Mapping(source = "flow.bandwidth", target = "bandwidth")
+    @Mapping(source = "flow.ignoreBandwidth", target = "ignoreBandwidth")
+    @Mapping(source = "flow.allocateProtectedPath", target = "allocateProtectedPath")
+    @Mapping(source = "flow.pinned", target = "pinned")
+    @Mapping(source = "flow.periodicPings", target = "periodicPings")
+    @Mapping(source = "flow.encapsulationType", target = "encapsulationType")
+    @Mapping(source = "flow.pathComputationStrategy", target = "pathComputationStrategy")
+    @Mapping(source = "flow.maxLatency", target = "maxLatency")
+    @Mapping(source = "flow.loopSwitchId", target = "loopSwitchId")
+    @Mapping(source = "forward.cookie", target = "forwardCookie")
+    @Mapping(source = "reverse.cookie", target = "reverseCookie")
+    @Mapping(source = "forward.meterId", target = "forwardMeterId")
+    @Mapping(source = "reverse.meterId", target = "reverseMeterId")
+    @Mapping(source = "forward.status", target = "forwardStatus")
+    @Mapping(source = "reverse.status", target = "reverseStatus")
+    @Mapping(source = "forward", target = "forwardPath")
+    @Mapping(source = "reverse", target = "reversePath")
+    @Mapping(source = "dumpType", target = "dumpType")
+    @Mapping(target = "flowMirrorPaths", ignore = true)
+    public abstract FlowDumpData generatedMap(Flow flow, FlowPath forward, FlowPath reverse, DumpType dumpType);
+
     @Mapping(source = "flow.srcSwitch.switchId", target = "sourceSwitch")
     @Mapping(source = "flow.destSwitch.switchId", target = "destinationSwitch")
     @Mapping(source = "flow.srcPort", target = "sourcePort")
@@ -174,10 +194,12 @@ public abstract class HistoryMapper {
     @Mapping(target = "reverseCookie", ignore = true)
     @Mapping(target = "forwardStatus", ignore = true)
     @Mapping(target = "reverseStatus", ignore = true)
+    @Mapping(target = "flowMirrorPaths", ignore = true)
     protected abstract FlowDumpData generatedMap(Flow flow, FlowResources resources, DumpType dumpType);
 
     @Mapping(target = "forwardCookie", ignore = true)
     @Mapping(target = "reverseCookie", ignore = true)
+    @Mapping(target = "mirrorPointStatuses", ignore = true)
     protected abstract FlowDumpPayload generatedMap(FlowEventDump dump);
 
     /**
@@ -237,5 +259,14 @@ public abstract class HistoryMapper {
             return fallback;
         }
         return value;
+    }
+
+    protected List<FlowMirrorPath> getFlowMirrorPaths(Flow flow) {
+        return flow.getPaths().stream()
+                .map(FlowPath::getFlowMirrorPointsSet)
+                .flatMap(Collection::stream)
+                .map(FlowMirrorPoints::getMirrorPaths)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 }

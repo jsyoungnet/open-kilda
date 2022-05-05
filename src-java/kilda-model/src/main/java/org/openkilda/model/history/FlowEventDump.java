@@ -17,6 +17,7 @@ package org.openkilda.model.history;
 
 import org.openkilda.model.CompositeDataEntity;
 import org.openkilda.model.FlowEncapsulationType;
+import org.openkilda.model.FlowMirrorPath;
 import org.openkilda.model.FlowPathStatus;
 import org.openkilda.model.MeterId;
 import org.openkilda.model.PathComputationStrategy;
@@ -39,6 +40,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.factory.Mappers;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -258,6 +260,10 @@ public class FlowEventDump implements CompositeDataEntity<FlowEventDump.FlowEven
         SwitchId getLoopSwitchId();
 
         void setLoopSwitchId(SwitchId switchId);
+
+        List<FlowMirrorPath> getFlowMirrorPaths();
+
+        void setFlowMirrorPaths(List<FlowMirrorPath> flowMirrorPaths);
     }
 
     /**
@@ -299,6 +305,7 @@ public class FlowEventDump implements CompositeDataEntity<FlowEventDump.FlowEven
         Long maxLatencyTier2;
         Integer priority;
         SwitchId loopSwitchId;
+        List<FlowMirrorPath> flowMirrorPaths;
 
         @Override
         public Boolean isAllocateProtectedPath() {

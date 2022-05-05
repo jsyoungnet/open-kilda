@@ -16,6 +16,7 @@
 package org.openkilda.persistence.hibernate.entities.history;
 
 import org.openkilda.model.FlowEncapsulationType;
+import org.openkilda.model.FlowMirrorPath;
 import org.openkilda.model.FlowPathStatus;
 import org.openkilda.model.MeterId;
 import org.openkilda.model.PathComputationStrategy;
@@ -31,6 +32,7 @@ import lombok.Setter;
 import lombok.experimental.Delegate;
 import org.hibernate.annotations.Type;
 
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -138,6 +140,7 @@ public class HibernateFlowEventDump extends EntityBase implements FlowEventDumpD
         private Long maxLatency;
         private Long maxLatencyTier2;
         private Integer priority;
+        private List<FlowMirrorPath> flowMirrorPaths;
 
         private SwitchId loopSwitchId;
     }
