@@ -75,7 +75,6 @@ public abstract class HistoryMapper {
     @Mapping(target = "type", source = "dumpType")
     @Mapping(target = "taskId", ignore = true)
     @Mapping(target = "data", ignore = true)
-    @Mapping(target = "maxLatencyTier2", ignore = true)
     public abstract FlowEventDump map(FlowDumpData dump);
 
     /**

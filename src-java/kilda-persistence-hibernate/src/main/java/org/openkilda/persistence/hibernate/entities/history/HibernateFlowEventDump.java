@@ -137,6 +137,7 @@ public class HibernateFlowEventDump extends EntityBase implements FlowEventDumpD
         private PathComputationStrategy pathComputationStrategy;
         private Long maxLatency;
         private Long maxLatencyTier2;
+        private Integer priority;
 
         private SwitchId loopSwitchId;
     }

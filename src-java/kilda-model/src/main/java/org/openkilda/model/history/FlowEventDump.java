@@ -251,6 +251,10 @@ public class FlowEventDump implements CompositeDataEntity<FlowEventDump.FlowEven
 
         void setMaxLatencyTier2(Long maxLatencyTier2);
 
+        Integer getPriority();
+
+        void setPriority(Integer priority);
+
         SwitchId getLoopSwitchId();
 
         void setLoopSwitchId(SwitchId switchId);
@@ -293,6 +297,7 @@ public class FlowEventDump implements CompositeDataEntity<FlowEventDump.FlowEven
         PathComputationStrategy pathComputationStrategy;
         Long maxLatency;
         Long maxLatencyTier2;
+        Integer priority;
         SwitchId loopSwitchId;
 
         @Override
