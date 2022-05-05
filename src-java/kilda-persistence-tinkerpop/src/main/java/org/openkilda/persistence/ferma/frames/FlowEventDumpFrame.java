@@ -290,6 +290,23 @@ public abstract class FlowEventDumpFrame extends KildaBaseVertexFrame implements
     public abstract void setMaxLatency(Long maxLatency);
 
     @Override
+    @Property("max_latency_tier2")
+    public abstract Long getMaxLatencyTier2();
+
+    @Override
+    @Property("max_latency_tier2")
+    public abstract void setMaxLatencyTier2(Long maxLatencyTier2);
+
+    @Override
+    @Property("priority")
+    public abstract Integer getPriority();
+
+    @Override
+    @Property("priority")
+    public abstract void setPriority(Integer priority);
+
+
+    @Override
     @Property("loop_switch_id")
     @Convert(SwitchIdConverter.class)
     public abstract SwitchId getLoopSwitchId();
