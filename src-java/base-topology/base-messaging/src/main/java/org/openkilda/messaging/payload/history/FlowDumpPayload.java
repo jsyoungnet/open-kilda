@@ -80,4 +80,6 @@ public class FlowDumpPayload {
     private long maxLatency;
 
     private SwitchId loopSwitchId;
+
+    private Long maxLatencyTier2;
 }
