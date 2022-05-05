@@ -60,6 +60,7 @@ public class FlowDumpData implements Serializable {
     private FlowEncapsulationType encapsulationType;
     private PathComputationStrategy pathComputationStrategy;
     private long maxLatency;
+    private long maxLatencyTier2;
     private SwitchId loopSwitchId;
 
     @AllArgsConstructor
