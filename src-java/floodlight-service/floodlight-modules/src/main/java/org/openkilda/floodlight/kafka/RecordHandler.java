@@ -232,6 +232,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 class RecordHandler implements Runnable {
@@ -826,11 +827,12 @@ class RecordHandler implements Runnable {
 
     private void doDumpGroupsForFlowHsRequest(CommandMessage message) {
         SwitchId switchId = ((DumpGroupsForFlowHsRequest) message.getData()).getSwitchId();
-        dumpGroupsRequest(switchId, buildSenderToFlowHs(message));
+        dumpGroupsRequest(switchId, buildSenderToFlowHs(message), message.getTimestamp());
     }
 
-    private void dumpGroupsRequest(SwitchId switchId, java.util.function.Consumer<MessageData> sender) {
+    private void dumpGroupsRequest(SwitchId switchId, java.util.function.Consumer<MessageData> sender, long hubTime) {
         try {
+            long timestamp = System.currentTimeMillis();
             logger.debug("Loading installed groups for switch {}", switchId);
 
             List<OFGroupDescStatsEntry> ofGroupDescStatsEntries = context.getSwitchManager()
@@ -844,6 +846,8 @@ class RecordHandler implements Runnable {
                     .switchId(switchId)
                     .groupEntries(groups)
                     .build();
+            response.hubRequestTimestamp = hubTime;
+            response.flDuration = System.currentTimeMillis() - timestamp;
             sender.accept(response);
         } catch (SwitchOperationException e) {
             logger.error("Dumping of groups on switch '{}' was unsuccessful: {}", switchId, e.getMessage());
@@ -948,7 +952,8 @@ class RecordHandler implements Runnable {
     }
 
     private void doDumpRulesRequest(CommandMessage message) {
-        processDumpRulesRequest(((DumpRulesRequest) message.getData()).getSwitchId(), buildSenderToNorthbound(message));
+        processDumpRulesRequest(((DumpRulesRequest) message.getData()).getSwitchId(), buildSenderToNorthbound(message),
+                message.getTimestamp(), message.hubToWorkerWait);
     }
 
     private void doDumpRulesForSwitchManagerRequest(CommandMessage message) {
@@ -958,11 +963,13 @@ class RecordHandler implements Runnable {
 
     private void doDumpRulesForFlowHsRequest(CommandMessage message) {
         processDumpRulesRequest(((DumpRulesForFlowHsRequest) message.getData()).getSwitchId(),
-                buildSenderToFlowHs(message));
+                buildSenderToFlowHs(message), message.getTimestamp(), message.hubToWorkerWait);
     }
 
-    private void processDumpRulesRequest(SwitchId switchId, java.util.function.Consumer<MessageData> sender) {
+    private void processDumpRulesRequest(SwitchId switchId, Consumer<MessageData> sender,
+                                         long hubTime, long hubToWorkerWait) {
         try {
+            long timestamp = System.currentTimeMillis();
             logger.debug("Loading installed rules for switch {}", switchId);
 
             List<OFFlowStatsEntry> flowEntries =
@@ -975,6 +982,9 @@ class RecordHandler implements Runnable {
                     .switchId(switchId)
                     .flowEntries(flows)
                     .build();
+            response.flDuration = System.currentTimeMillis() - timestamp;
+            response.hubRequestTimestamp = hubTime;
+            response.hubToWorkerWait = hubToWorkerWait;
             sender.accept(response);
         } catch (SwitchOperationException e) {
             logger.error("Dumping of rules on switch '{}' was unsuccessful: {}", switchId, e.getMessage());
@@ -1244,7 +1254,7 @@ class RecordHandler implements Runnable {
 
     private void doDumpMetersRequest(CommandMessage message) {
         DumpMetersRequest request = (DumpMetersRequest) message.getData();
-        dumpMeters(request.getSwitchId(), buildSenderToNorthbound(message));
+        dumpMeters(request.getSwitchId(), buildSenderToNorthbound(message), message.getTimestamp());
     }
 
     private void doDumpMetersForSwitchManagerRequest(CommandMessage message) {
@@ -1254,7 +1264,7 @@ class RecordHandler implements Runnable {
 
     private void doDumpMetersForFlowHsRequest(CommandMessage message) {
         DumpMetersForFlowHsRequest request = (DumpMetersForFlowHsRequest) message.getData();
-        dumpMeters(request.getSwitchId(), buildSenderToFlowHs(message));
+        dumpMeters(request.getSwitchId(), buildSenderToFlowHs(message), message.getTimestamp());
     }
 
     private java.util.function.Consumer<MessageData> buildSenderToSwitchManager(Message message) {
@@ -1306,8 +1316,9 @@ class RecordHandler implements Runnable {
         };
     }
 
-    private void dumpMeters(SwitchId switchId, java.util.function.Consumer<MessageData> sender) {
+    private void dumpMeters(SwitchId switchId, java.util.function.Consumer<MessageData> sender, long hubTime) {
         try {
+            long timestamp = System.currentTimeMillis();
             logger.debug("Get all meters for switch {}", switchId);
             ISwitchManager switchManager = context.getSwitchManager();
             List<OFMeterConfig> meterEntries = switchManager.dumpMeters(DatapathId.of(switchId.toLong()));
@@ -1319,6 +1330,8 @@ class RecordHandler implements Runnable {
                     .switchId(switchId)
                     .meterEntries(meters)
                     .build();
+            response.hubRequestTimestamp = hubTime;
+            response.flDuration = System.currentTimeMillis() - timestamp;
             sender.accept(response);
         } catch (UnsupportedSwitchOperationException e) {
             logger.info("Meters not supported: {}", switchId);

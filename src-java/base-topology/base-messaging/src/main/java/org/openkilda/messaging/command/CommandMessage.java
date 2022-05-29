@@ -53,6 +53,12 @@ public class CommandMessage extends Message {
     @JsonProperty(PAYLOAD)
     protected CommandData data;
 
+    @JsonProperty("send_time")
+    public long workerSendTime;
+
+    @JsonProperty("hub_to_worker_wait")
+    public long hubToWorkerWait;
+
     /**
      * Instance constructor.
      *
@@ -66,21 +72,25 @@ public class CommandMessage extends Message {
                           @JsonProperty(TIMESTAMP) final long timestamp,
                           @JsonProperty(CORRELATION_ID) final String correlationId,
                           @JsonProperty(DESTINATION) final Destination destination,
-                          @JsonProperty("cookie") MessageCookie cookie) {
+                          @JsonProperty("cookie") MessageCookie cookie,
+                          @JsonProperty("send_time") long workerSendTime,
+                          @JsonProperty("hub_to_worker_wait") long hubToWorkerWait) {
         super(timestamp, correlationId, destination, cookie);
         setData(data);
+        this.workerSendTime = workerSendTime;
+        this.hubToWorkerWait = hubToWorkerWait;
     }
 
     public CommandMessage(final CommandData data, final long timestamp, final String correlationId) {
-        this(data, timestamp, correlationId, null, null);
+        this(data, timestamp, correlationId, null, null, 0, 0);
     }
 
     public CommandMessage(CommandData data, long timestamp, String correlationId, Destination destination) {
-        this(data, timestamp, correlationId, destination, null);
+        this(data, timestamp, correlationId, destination, null, 0, 0);
     }
 
     public CommandMessage(CommandData data, String correlationId, MessageCookie cookie) {
-        this(data, System.currentTimeMillis(), correlationId, null, cookie);
+        this(data, System.currentTimeMillis(), correlationId, null, cookie, 0, 0);
     }
 
     /**

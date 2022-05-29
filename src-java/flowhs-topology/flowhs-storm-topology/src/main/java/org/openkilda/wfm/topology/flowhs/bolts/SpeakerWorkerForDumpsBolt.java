@@ -44,7 +44,8 @@ public class SpeakerWorkerForDumpsBolt extends WorkerBolt {
         // Due to specific request handling in FL, we have to provide the key and correlationId which are equal.
         Preconditions.checkArgument(key.equals(request.getCorrelationId()),
                 "Tuple %s has the key which doesn't correspond to correlationId", requestTuple);
-
+        request.workerSendTime = System.currentTimeMillis();
+        request.hubToWorkerWait = System.currentTimeMillis() - request.getTimestamp();
         emitWithContext(SPEAKER_WORKER_REQUEST_SENDER.name(), getCurrentTuple(), new Values(key, request));
     }
 
@@ -54,6 +55,11 @@ public class SpeakerWorkerForDumpsBolt extends WorkerBolt {
         Object payload = responseTuple.getValueByField(FIELD_ID_PAYLOAD);
         if (payload instanceof SpeakerDataResponse) {
             SpeakerDataResponse dataResponse = (SpeakerDataResponse) payload;
+            dataResponse.getData().workerDuration = System.currentTimeMillis() - pullValue(
+                    requestTuple, FIELD_ID_PAYLOAD, CommandMessage.class).workerSendTime;
+            dataResponse.getData().workerToHubTimestamp = System.currentTimeMillis();
+            dataResponse.getData().hubToWorkerWait = pullValue(
+                    requestTuple, FIELD_ID_PAYLOAD, CommandMessage.class).hubToWorkerWait;
             emitResponseToHub(getCurrentTuple(), new Values(key, dataResponse.getData(), getCommandContext()));
         } else {
             log.debug("Unknown response received: {}", payload);
