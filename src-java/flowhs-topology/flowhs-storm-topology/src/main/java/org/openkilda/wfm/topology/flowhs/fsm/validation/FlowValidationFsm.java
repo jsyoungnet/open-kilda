@@ -46,6 +46,7 @@ import org.openkilda.wfm.error.IllegalFlowStateException;
 import org.openkilda.wfm.error.SwitchNotFoundException;
 import org.openkilda.wfm.share.flow.resources.FlowResourcesManager;
 import org.openkilda.wfm.share.metrics.MeterRegistryHolder;
+import org.openkilda.wfm.share.metrics.TimedExecution;
 import org.openkilda.wfm.topology.flowhs.fsm.common.NbTrackableFlowProcessingFsm;
 import org.openkilda.wfm.topology.flowhs.fsm.validation.FlowValidationFsm.Event;
 import org.openkilda.wfm.topology.flowhs.fsm.validation.FlowValidationFsm.State;
@@ -82,6 +83,9 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
     private int awaitingRules;
     private int awaitingMeters;
     private int awaitingGroups;
+    private long rulesInit;
+    private long metersInit;
+    private long groupsInit;
     private final List<SwitchFlowEntries> receivedRules = new ArrayList<>();
     private final List<SwitchMeterEntries> receivedMeters = new ArrayList<>();
     private final List<SwitchGroupEntries> receivedGroups = new ArrayList<>();
@@ -99,6 +103,7 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
                 config.getFlowMeterMinBurstSizeInKbits(), config.getFlowMeterBurstCoefficient());
     }
 
+    @TimedExecution("fsm.send_data")
     protected void receiveData(State from, State to,
                                Event event, Object context) {
         Flow flow;
@@ -122,42 +127,85 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
         log.debug("Send commands to get rules on the switches");
         switchIds.forEach(switchId ->
                 getCarrier().sendSpeakerRequest(flowId, new DumpRulesForFlowHsRequest(switchId)));
+        rulesInit = System.currentTimeMillis();
 
         log.debug("Send commands to get meters on the termination switches");
         awaitingMeters = TERMINATION_SWITCHES_COUNT;
         getCarrier().sendSpeakerRequest(flowId, new DumpMetersForFlowHsRequest(flow.getSrcSwitchId()));
         getCarrier().sendSpeakerRequest(flowId, new DumpMetersForFlowHsRequest(flow.getDestSwitchId()));
+        metersInit = System.currentTimeMillis();
 
         log.debug("Send commands to get groups on the termination switches");
         awaitingGroups = TERMINATION_SWITCHES_COUNT;
         getCarrier().sendSpeakerRequest(flowId, new DumpGroupsForFlowHsRequest(flow.getSrcSwitchId()));
         getCarrier().sendSpeakerRequest(flowId, new DumpGroupsForFlowHsRequest(flow.getDestSwitchId()));
+        groupsInit = System.currentTimeMillis();
     }
 
     protected void receivedRules(State from, State to,
                                  Event event, Object context) {
         SwitchFlowEntries switchFlowEntries = (SwitchFlowEntries) context;
+        final long workerToHubWait = System.currentTimeMillis() - switchFlowEntries.workerToHubTimestamp;
+
         log.info("Switch rules received for switch {}", switchFlowEntries.getSwitchId());
         receivedRules.add(switchFlowEntries);
         awaitingRules--;
+        if (awaitingRules == 0) {
+            sendToRegistry("fsm.rules_hub_all", System.currentTimeMillis() - rulesInit);
+        }
+        sendToRegistry("fsm.rules_hub_one_rtl", System.currentTimeMillis() - switchFlowEntries.hubRequestTimestamp);
+        sendToRegistry("fsm.rules_worker_rtl", switchFlowEntries.workerDuration);
+        sendToRegistry("fsm.rules_fl_rtl", switchFlowEntries.flDuration);
+        sendToRegistry("fsm.rules_hub_to_worker_wait", switchFlowEntries.hubToWorkerWait);
+        sendToRegistry("fsm.rules_worker_to_hub_wait", workerToHubWait);
         checkOfCompleteDataCollection();
+    }
+
+    private void sendToRegistry(String name, long duration) {
+        log.info("Send to registry {} {} {}", flowId, name, duration);
+        if (!MeterRegistryHolder.getRegistry().isPresent()) {
+            log.error("No registry for {}", flowId);
+        }
+        MeterRegistryHolder.getRegistry().ifPresent(
+                registry -> registry.timer(name).record(duration, TimeUnit.MILLISECONDS));
     }
 
     protected void receivedMeters(State from, State to,
                                   Event event, Object context) {
         SwitchMeterEntries switchMeterEntries = (SwitchMeterEntries) context;
+        final long workerToHubWait = System.currentTimeMillis() - switchMeterEntries.workerToHubTimestamp;
         log.info("Switch meters received for switch {}", switchMeterEntries.getSwitchId());
         receivedMeters.add(switchMeterEntries);
         awaitingMeters--;
+        if (awaitingMeters == 0) {
+            sendToRegistry("fsm.meters_hub_all", System.currentTimeMillis() - metersInit);
+        }
+        sendToRegistry("fsm.meters_hub_one_rtl", System.currentTimeMillis() - switchMeterEntries.hubRequestTimestamp);
+        sendToRegistry("fsm.meters_worker_rtl", switchMeterEntries.workerDuration);
+        sendToRegistry("fsm.meters_fl_rtl", switchMeterEntries.flDuration);
+        sendToRegistry("fsm.meters_hub_to_worker_wait", switchMeterEntries.hubToWorkerWait);
+        sendToRegistry("fsm.meters_worker_to_hub_wait", workerToHubWait);
+
         checkOfCompleteDataCollection();
     }
 
     protected void receivedGroups(State from, State to,
                                   Event event, Object context) {
         SwitchGroupEntries switchGroupEntries = (SwitchGroupEntries) context;
+        final long workerToHubWait = System.currentTimeMillis() - switchGroupEntries.workerToHubTimestamp;
         log.info("Switch meters received for switch {}", switchGroupEntries.getSwitchId());
         receivedGroups.add(switchGroupEntries);
         awaitingGroups--;
+
+        if (awaitingGroups == 0) {
+            sendToRegistry("fsm.groups_hub_all", System.currentTimeMillis() - groupsInit);
+        }
+        sendToRegistry("fsm.groups_hub_one_rtl", System.currentTimeMillis() - switchGroupEntries.hubRequestTimestamp);
+        sendToRegistry("fsm.groups_worker_rtl", switchGroupEntries.workerDuration);
+        sendToRegistry("fsm.groups_fl_rtl", switchGroupEntries.flDuration);
+        sendToRegistry("fsm.groups_hub_to_worker_wait", switchGroupEntries.hubToWorkerWait);
+        sendToRegistry("fsm.groups_worker_to_hub_wait", workerToHubWait);
+
         checkOfCompleteDataCollection();
     }
 
@@ -167,6 +215,7 @@ public final class FlowValidationFsm extends NbTrackableFlowProcessingFsm<FlowVa
         }
     }
 
+    @TimedExecution("fsm.validate_flow")
     protected void validateFlow(State from, State to, Event event, Object context) {
         try {
             response = service.validateFlow(flowId, receivedRules, receivedMeters, receivedGroups);

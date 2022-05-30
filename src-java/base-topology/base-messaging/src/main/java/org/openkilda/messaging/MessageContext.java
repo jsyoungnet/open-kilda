@@ -17,14 +17,14 @@ package org.openkilda.messaging;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import lombok.NonNull;
-import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-@Value
+@Data
 public class MessageContext implements Serializable {
     @JsonProperty("correlation_id")
     private final String correlationId;
@@ -32,28 +32,38 @@ public class MessageContext implements Serializable {
     @JsonProperty("create_time")
     private final long createTime;
 
+    @JsonProperty("worker_send_time")
+    public long workerSendTime;
+
+    @JsonProperty("worker_receive_time")
+    public long workerReceiveTime;
+
     public MessageContext() {
         this(UUID.randomUUID().toString());
     }
 
     public MessageContext(Message message) {
-        this(message.getCorrelationId(), message.getTimestamp());
+        this(message.getCorrelationId(), message.getTimestamp(), 0, 0);
     }
 
     public MessageContext(String correlationId) {
-        this(correlationId, System.currentTimeMillis());
+        this(correlationId, System.currentTimeMillis(), 0, 0);
     }
 
     public MessageContext(String operationId, String correlationId) {
-        this(StringUtils.joinWith(" : ", operationId, correlationId), System.currentTimeMillis());
+        this(StringUtils.joinWith(" : ", operationId, correlationId), System.currentTimeMillis(), 0, 0);
     }
 
     @JsonCreator
     public MessageContext(
             @JsonProperty("correlation_id") @NonNull String correlationId,
-            @JsonProperty("create_time") long createTime) {
+            @JsonProperty("create_time") long createTime,
+            @JsonProperty("worker_send_time") long workerSendTime,
+            @JsonProperty("worker_receive_time") long workerReceiveTime) {
         this.correlationId = correlationId;
         this.createTime = createTime;
+        this.workerSendTime = workerSendTime;
+        this.workerReceiveTime = workerReceiveTime;
     }
 
     /**

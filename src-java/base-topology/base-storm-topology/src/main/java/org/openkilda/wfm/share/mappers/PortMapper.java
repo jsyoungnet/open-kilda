@@ -41,6 +41,11 @@ public abstract class PortMapper {
     @Mapping(target = "maxCapacity", ignore = true)
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract PortInfoData map(Port port);
 
     /**
@@ -68,5 +73,10 @@ public abstract class PortMapper {
     @Mapping(source = "switchObj.switchId", target = "switchId")
     @Mapping(source = "port", target = "portNumber")
     @Mapping(target = "timestamp", ignore = true)
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract PortPropertiesPayload map(PortProperties portProperties);
 }

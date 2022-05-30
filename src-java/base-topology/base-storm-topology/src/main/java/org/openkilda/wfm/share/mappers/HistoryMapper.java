@@ -150,6 +150,11 @@ public abstract class HistoryMapper {
 
     @Mapping(target = "timestamp", ignore = true)
     @Mapping(target = "id", source = "recordId")
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract PortHistoryPayload map(PortEvent portEvent);
 
     public String map(SwitchId switchId) {
@@ -158,6 +163,11 @@ public abstract class HistoryMapper {
 
     @Mapping(target = "statusChangeTimestamp", source = "timestamp")
     @Mapping(target = "timestamp", ignore = true)
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract FlowStatusTimestampsEntry map(FlowStatusView flowStatusesImmutableView);
 
     @Mapping(source = "flow.srcSwitch.switchId", target = "sourceSwitch")
