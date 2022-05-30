@@ -621,7 +621,7 @@ public class FlowValidationTestBase extends InMemoryGraphBasedTest {
                 .build());
     }
 
-    private SwitchFlowEntries getSwitchFlowEntries(SwitchId switchId, FlowEntry... flowEntries) {
+    protected SwitchFlowEntries getSwitchFlowEntries(SwitchId switchId, FlowEntry... flowEntries) {
         return SwitchFlowEntries.builder()
                 .switchId(switchId)
                 .flowEntries(Lists.newArrayList(flowEntries))

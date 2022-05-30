@@ -46,12 +46,22 @@ public abstract class LinkMapper {
             org.openkilda.model.BfdSessionStatus status);
 
     @Mapping(target = "timestamp", ignore = true)
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract BfdPropertiesReadRequest mapBfdRequest(NetworkEndpoint source, NetworkEndpoint destination);
 
     @Mapping(target = "timestamp", ignore = true)
     @Mapping(target = "source", source = "source")
     @Mapping(target = "destination", source = "destination")
     @Mapping(target = "properties", source = "properties")
+    @Mapping(target = "workerDuration", ignore = true)
+    @Mapping(target = "flDuration", ignore = true)
+    @Mapping(target = "hubRequestTimestamp", ignore = true)
+    @Mapping(target = "workerToHubTimestamp", ignore = true)
+    @Mapping(target = "hubToWorkerWait", ignore = true)
     public abstract BfdPropertiesWriteRequest mapBfdRequest(
             NetworkEndpoint source, NetworkEndpoint destination,
             org.openkilda.northbound.dto.v2.links.BfdProperties properties);
