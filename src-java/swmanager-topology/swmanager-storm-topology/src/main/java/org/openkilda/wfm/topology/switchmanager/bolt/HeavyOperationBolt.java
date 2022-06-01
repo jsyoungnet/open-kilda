@@ -74,6 +74,7 @@ public class HeavyOperationBolt extends AbstractBolt {
             SwitchEntities expectedEntities = new SwitchEntities(validationService.buildExpectedEntities(switchId));
             message = new InfoMessage(expectedEntities, getCommandContext().getCorrelationId(), messageCookie);
         } catch (Exception e) {
+            log.error(String.format("Enable to build expected switch entities %s", e.getMessage()), e);
             ErrorData errorData = new ErrorData(
                     ErrorType.INTERNAL_ERROR, "Enable to build expected switch entities.", e.getMessage());
             message = new ErrorMessage(errorData, getCommandContext().getCorrelationId(), messageCookie);
