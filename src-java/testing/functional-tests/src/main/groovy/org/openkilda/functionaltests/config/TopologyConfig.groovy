@@ -76,6 +76,7 @@ class TopologyConfig {
         print(getTopologyDefinitionFile())
         print("*****************")
         print(topologyDefinition.toString())
+
         print("*****************")
         //*****************
         topologyDefinition.setBfdOffset(bfdOffset)
