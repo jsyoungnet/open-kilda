@@ -72,6 +72,12 @@ class TopologyConfig {
         mapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
         TopologyDefinition topologyDefinition =
                 mapper.readValue(FileUtils.openInputStream(getTopologyDefinitionFile()), TopologyDefinition.class)
+        //****************
+        print(getTopologyDefinitionFile())
+        print("*****************")
+        print(topologyDefinition.toString())
+        print("*****************")
+        //*****************
         topologyDefinition.setBfdOffset(bfdOffset)
         topologyDefinition.switches.each { sw ->
             def controllers = sw.regions.collect {region ->
