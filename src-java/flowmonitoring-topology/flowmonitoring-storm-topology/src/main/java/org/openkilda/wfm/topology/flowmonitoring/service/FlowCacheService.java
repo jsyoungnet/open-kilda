@@ -106,6 +106,7 @@ public class FlowCacheService {
      * Remove flow info.
      */
     public void removeFlowInfo(String flowId) {
+        log.error("--->>>  flowStates.remove(flowId) with flowId: " + flowId);
         flowStates.remove(flowId);
     }
 
@@ -113,6 +114,9 @@ public class FlowCacheService {
      * Start latency check for flow with flowId.
      */
     public void processFlowLatencyCheck(String flowId) {
+        String list = flowStates.keySet().stream().reduce("--->>> flowStates: ", (a, b) -> a + "|" + b);
+        log.error("--->>>  flowStates: " + list);
+
         FlowState flowState = flowStates.get(flowId);
         if (flowState != null) {
             checkFlowLatency(flowId, flowState);
