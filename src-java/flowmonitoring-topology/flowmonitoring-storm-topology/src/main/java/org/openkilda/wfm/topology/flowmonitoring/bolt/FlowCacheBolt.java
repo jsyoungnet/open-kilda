@@ -86,7 +86,7 @@ public class FlowCacheBolt extends AbstractBolt implements FlowCacheBoltCarrier 
 
     @Override
     protected void handleInput(Tuple input) throws PipelineException {
-        log.error("--->>> FlowCacheBolt, handleInput with Tuple: %,SourceComponent: %, SourceStreamId: %",
+        log.error("--->>> FlowCacheBolt, handleInput with Tuple: {},SourceComponent: {}, SourceStreamId: {}",
                 input, input.getSourceComponent(), input.getSourceStreamId());
 
         if (active) {
@@ -117,7 +117,7 @@ public class FlowCacheBolt extends AbstractBolt implements FlowCacheBoltCarrier 
             }
 
             FlowRttStatsData flowRttStatsData = pullValue(input, INFO_DATA_FIELD, FlowRttStatsData.class);
-            log.error("--->>> FlowRttStatsData: %", flowRttStatsData);
+            log.error("--->>> FlowRttStatsData: {}", flowRttStatsData);
             flowCacheService.processFlowRttStatsData(flowRttStatsData); //flowRttStatsData msf from serer42
         }
     }
