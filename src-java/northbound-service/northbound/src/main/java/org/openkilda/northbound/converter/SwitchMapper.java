@@ -39,6 +39,8 @@ import org.openkilda.messaging.info.switches.v2.MisconfiguredInfo;
 import org.openkilda.messaging.info.switches.v2.RuleInfoEntryV2;
 import org.openkilda.messaging.info.switches.v2.RulesValidationEntryV2;
 import org.openkilda.messaging.info.switches.v2.SwitchValidationResponseV2;
+import org.openkilda.messaging.model.ExcludeFilter;
+import org.openkilda.messaging.model.IncludeFilter;
 import org.openkilda.messaging.model.SwitchAvailabilityData;
 import org.openkilda.messaging.model.SwitchAvailabilityEntry;
 import org.openkilda.messaging.model.SwitchLocation;
@@ -318,4 +320,39 @@ public abstract class SwitchMapper {
     public abstract RuleInfoDtoV2.FieldMatch toFieldMatch(RuleInfoEntryV2.FieldMatch fieldMatch);
 
     public abstract GroupInfoDtoV2 toGroupInfoDtoV2(GroupInfoEntryV2 data);
+
+    private IncludeFilter toIncludeFilter(String value) {
+        switch (value) {
+            case("meters"):
+                return IncludeFilter.METERS;
+            case("groups"):
+                return IncludeFilter.GROUPS;
+            case("logical_ports"):
+                return IncludeFilter.LOGICAL_PORTS;
+            case("rules"):
+                return IncludeFilter.RULES;
+            default:
+                throw new IllegalArgumentException("Unexpected include filter");
+        }
+    }
+
+    private ExcludeFilter toExcludeFilter(String value) {
+        switch (value) {
+            case("flow_info"):
+                return ExcludeFilter.FLOW_INFO;
+            default:
+                throw new IllegalArgumentException("Unexpected exclude filter");
+        }
+    }
+
+    /**
+     * Convert list of {@link String} into list of {@link IncludeFilter}.
+     */
+    public List<IncludeFilter> toIncludeFilters(List<String> value) {
+        return value.stream().map(this::toIncludeFilter).collect(Collectors.toList());
+    }
+
+    public List<ExcludeFilter> toExcludeFilters(List<String> value) {
+        return value.stream().map(this::toExcludeFilter).collect(Collectors.toList());
+    }
 }
