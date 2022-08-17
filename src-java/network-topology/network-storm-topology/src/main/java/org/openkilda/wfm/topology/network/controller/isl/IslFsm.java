@@ -549,7 +549,8 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
                 .srcPort(sourceEndpoint.getPortNumber())
                 .destSwitch(dest.getSw())
                 .destPort(destEndpoint.getPortNumber())
-                .underMaintenance(source.getSw().isUnderMaintenance() || dest.getSw().isUnderMaintenance());
+                .underMaintenance(source.getSw().isUnderMaintenance() || dest.getSw().isUnderMaintenance()
+                        || featureTogglesRepository.getOrDefault().getDiscoverNewIslsInUnderMaintenanceMode());
         initializeFromLinkProps(sourceEndpoint, destEndpoint, islBuilder);
         Isl link = islBuilder.build();
 
