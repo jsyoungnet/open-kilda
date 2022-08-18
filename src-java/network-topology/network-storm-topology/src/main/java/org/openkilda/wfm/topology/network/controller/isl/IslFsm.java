@@ -71,6 +71,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEvent, IslFsmContext> {
@@ -550,13 +551,29 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
                 .destSwitch(dest.getSw())
                 .destPort(destEndpoint.getPortNumber())
                 .underMaintenance(source.getSw().isUnderMaintenance() || dest.getSw().isUnderMaintenance()
-                        || featureTogglesRepository.getOrDefault().getDiscoverNewIslsInUnderMaintenanceMode());
+                        || shouldDiscoveredInUnderMaintenance(source, dest));
         initializeFromLinkProps(sourceEndpoint, destEndpoint, islBuilder);
         Isl link = islBuilder.build();
 
         log.info("Create new DB object (prefilled): {}", link);
         islRepository.add(link);
         return link;
+    }
+
+    private Boolean shouldDiscoveredInUnderMaintenance(Anchor source, Anchor dest) {
+        Boolean featureToggle = featureTogglesRepository.getOrDefault().getDiscoverNewIslsInUnderMaintenanceMode();
+        Collection<Isl> isls = islRepository.findAll().stream()
+                .filter(isl -> isCurrentIsl(source, dest, isl))
+                .collect(Collectors.toList());
+        return featureToggle && isls.isEmpty();
+    }
+
+    private boolean isCurrentIsl(Anchor source, Anchor dest, Isl isl) {
+        return (isl.getSrcSwitch() == source.getSw() &&
+                isl.getSrcPort() == source.getEndpoint().getPortNumber()) && (
+                isl.getDestSwitch() == dest.getSw() &&
+                        isl.getDestPort() == dest.getEndpoint().getPortNumber()
+        );
     }
 
     private Anchor loadSwitchCreateIfMissing(Endpoint endpoint) {
