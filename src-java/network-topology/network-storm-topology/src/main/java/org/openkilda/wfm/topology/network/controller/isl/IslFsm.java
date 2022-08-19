@@ -71,7 +71,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Slf4j
 public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEvent, IslFsmContext> {
@@ -562,11 +561,17 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
     }
 
     private Boolean shouldDiscoveredInUnderMaintenance(Anchor source, Anchor dest) {
-        Boolean featureToggle = featureTogglesRepository.getOrDefault().getDiscoverNewIslsInUnderMaintenanceMode();
-        Collection<Isl> isls = islRepository.findAll().stream()
+        boolean isFeatureToggleEnabled = featureTogglesRepository.getOrDefault()
+                .getDiscoverNewIslsInUnderMaintenanceMode();
+        if (!isFeatureToggleEnabled) {
+            return false;
+        }
+
+        log.debug("Enabled discover_new_isls_in_under_maintenance_mode feature. Try to check is this isl is new one");
+        Optional<Isl> storedIsl = islRepository.findAll().stream()
                 .filter(isl -> isCurrentIsl(source, dest, isl))
-                .collect(Collectors.toList());
-        return featureToggle && isls.isEmpty();
+                .findAny();
+        return !storedIsl.isPresent();
     }
 
     private boolean isCurrentIsl(Anchor source, Anchor dest, Isl isl) {
