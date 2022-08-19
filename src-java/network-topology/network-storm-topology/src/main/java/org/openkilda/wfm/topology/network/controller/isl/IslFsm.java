@@ -550,7 +550,8 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
                 .srcPort(sourceEndpoint.getPortNumber())
                 .destSwitch(dest.getSw())
                 .destPort(destEndpoint.getPortNumber())
-                .underMaintenance(source.getSw().isUnderMaintenance() || dest.getSw().isUnderMaintenance()
+                .underMaintenance(source.getSw().isUnderMaintenance()
+                        || dest.getSw().isUnderMaintenance()
                         || shouldDiscoveredInUnderMaintenance(source, dest));
         initializeFromLinkProps(sourceEndpoint, destEndpoint, islBuilder);
         Isl link = islBuilder.build();
@@ -569,11 +570,11 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
     }
 
     private boolean isCurrentIsl(Anchor source, Anchor dest, Isl isl) {
-        return (isl.getSrcSwitch() == source.getSw() &&
-                isl.getSrcPort() == source.getEndpoint().getPortNumber()) && (
-                isl.getDestSwitch() == dest.getSw() &&
-                        isl.getDestPort() == dest.getEndpoint().getPortNumber()
-        );
+        boolean s = isl.getSrcSwitch() == source.getSw()
+                && isl.getSrcPort() == source.getEndpoint().getPortNumber();
+        boolean d = isl.getDestSwitch() == dest.getSw()
+                && isl.getDestPort() == dest.getEndpoint().getPortNumber();
+        return s && d;
     }
 
     private Anchor loadSwitchCreateIfMissing(Endpoint endpoint) {
@@ -598,8 +599,8 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
 
     private Optional<Isl> loadIsl(Endpoint source, Endpoint dest) {
         return islRepository.findByEndpoints(
-                source.getDatapath(), source.getPortNumber(),
-                dest.getDatapath(), dest.getPortNumber())
+                        source.getDatapath(), source.getPortNumber(),
+                        dest.getDatapath(), dest.getPortNumber())
                 .map(link -> {
                     log.debug("Read ISL object: {}", link);
                     return link;
@@ -659,7 +660,7 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
         BfdProperties leftToRight = loadBfdProperties(reference.getSource(), reference.getDest());
         BfdProperties rightToLeft = loadBfdProperties(reference.getDest(), reference.getSource());
 
-        if (! leftToRight.equals(rightToLeft)) {
+        if (!leftToRight.equals(rightToLeft)) {
             log.error(
                     "ISL {} records contains not equal BFD properties data {} != {} (use {})",
                     reference, leftToRight, rightToLeft, leftToRight);
@@ -703,20 +704,20 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
         switch (downReason) {
             case PORT_DOWN:
                 humanReason = String.format("ISL %s become %s due to physical link DOWN event on %s",
-                                            reference, effectiveStatus, endpoint);
+                        reference, effectiveStatus, endpoint);
                 break;
             case POLL_TIMEOUT:
                 humanReason = String.format("ISL %s become %s because of FAIL TIMEOUT (endpoint:%s)",
-                                            reference, effectiveStatus, endpoint);
+                        reference, effectiveStatus, endpoint);
                 break;
             case BFD_DOWN:
                 humanReason = String.format("ISL %s become %s because BFD detect link failure (endpoint:%s)",
-                                            reference, effectiveStatus, endpoint);
+                        reference, effectiveStatus, endpoint);
                 break;
 
             default:
                 humanReason = String.format("ISL %s become %s (endpoint:%s, reason:%s)",
-                                            reference, effectiveStatus, endpoint, downReason);
+                        reference, effectiveStatus, endpoint, downReason);
         }
 
         return humanReason;
@@ -730,7 +731,7 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
 
     private static String makeInvalidMappingMessage(Class<?> from, Class<?> to, Object value) {
         return String.format("There is no mapping defined between %s and %s for %s", from.getName(),
-                             to.getName(), value);
+                to.getName(), value);
     }
 
     @Value
