@@ -113,23 +113,24 @@ def time_stream(start, step):
 
 
 def finite_time_stream(stream, end):
-    now = next(stream)
-    while now < end:
+    for now in stream:
+        if end < now:
+            break
         yield now
-        now = next(stream)
 
 
 def frame_stream(stream):
-    start = next(stream)
+    start = None
     for end in stream:
-        yield (start, end)
+        if start is not None:
+            yield start, end
         start = end
 
 
 def frame_overlap_fix_stream(
         stream, start_offset=ZERO_TIMEDELTA, end_offset=ZERO_TIMEDELTA):
     for start, end in stream:
-        yield (start + start_offset, end + end_offset)
+        yield start + start_offset, end + end_offset
 
 
 def stats_stream(stream, client, metric):
