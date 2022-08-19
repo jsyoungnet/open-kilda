@@ -566,8 +566,6 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
         if (!isFeatureToggleEnabled) {
             return false;
         }
-
-        log.debug("Enabled discover_new_isls_in_under_maintenance_mode feature. Try to check is this isl is new one");
         Optional<Isl> storedIsl = islRepository.findAll().stream()
                 .filter(isl -> isCurrentIsl(source, dest, isl))
                 .findAny();
@@ -575,9 +573,9 @@ public final class IslFsm extends AbstractBaseFsm<IslFsm, IslFsmState, IslFsmEve
     }
 
     private boolean isCurrentIsl(Anchor source, Anchor dest, Isl isl) {
-        boolean s = isl.getSrcSwitch() == source.getSw()
+        boolean s = Objects.equals(isl.getSrcSwitch(), source.getSw())
                 && isl.getSrcPort() == source.getEndpoint().getPortNumber();
-        boolean d = isl.getDestSwitch() == dest.getSw()
+        boolean d = Objects.equals(isl.getDestSwitch(), dest.getSw())
                 && isl.getDestPort() == dest.getEndpoint().getPortNumber();
         return s && d;
     }
