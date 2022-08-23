@@ -7,7 +7,7 @@ combined with a flow-join can mimic such a capability.
 ## Background
 Kilda already has the ability to mirror flows at any point in the path of the flow, thus half of the work to create a multi-access capability is already done.  We'll discuss a couple of different scenarios in which we'd use this mirror capability: the first is the ability to mirror an individual customer flow.  
 
-![](/Users/jyoung/Desktop/flow-join-ha.jpg "Simple HA Flow")
+![](flow-join-ha.jpg "Simple HA Flow")
 
 In this case we'd be mirroring the data coming from a single instance of a service.  For instance, if a customer wished to mirror the data coming from an Internet connection or from an MPLS connection.  We would offer such a service to customers running Virtual Machines (VM) within a Kilda network.  Second, we'll stay with the individual customer flow that originates in a service and terminates into a VM, but we'll use a Y-flow instead of a simple flow.  The Y-flow would have a branching (A and B)  end at the service side (e.g. Internet or MPLS side) and as the primary and secondary parts of the Y-flow near the HA devices we'll want to mirror both primary and secondary and make primary and secondary appear to terminate in both HA devices.  
 
@@ -21,7 +21,7 @@ Mirroring of a flow will enable us to make packets from a source appear at both 
 
 Treatment of the Join portion of an HA flow depends upon how that flow is constructed.  The most complicated case for joining traffic into a flow and making both the primary and secondary HA devices appear to be connected to the same flow corresponds to the simplest use case for an HA flow:  the individual customer.
 
-![](/Users/jyoung/Desktop/flow-join-vlan-ha.jpg "Simple Service, Complex Flow")
+![](flow-join-vlan-ha.jpg "Simple Service, Complex Flow")
 
 In the figure directly above we can see that the flow can be decomposed into three separate segments, each with a different VLAN-ID as an identifier.  From left to right we see that the Service is going to tag packets that originate at this end of the flow with a "Service-based" VLAN-ID.  Next, that VLAN-ID is removed by OpenKilda and replaced by a transit VLAN-ID or a transit VX-LAN header.  The packets continue through the Kilda network with this VLAN/VXLAN-ID until they reach the FlowMirrorPoint in the path.  At the FlowMirrorPoint the transit VLAN/VXLAN-ID is removed and a customer-specific VLAN-ID is pushed onto the packet for delivery to the customer's application.
 
